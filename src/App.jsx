@@ -1,4 +1,41 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ─── CONFIG FIREBASE ── reemplaza con tus datos de console.firebase.google.com ─
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDZij70_7ty4BL4Jh9BAwwjkOOZpYdEJt0",
+  authDomain: "gestion-operativa-dadt.firebaseapp.com",
+  projectId: "gestion-operativa-dadt",
+  storageBucket: "gestion-operativa-dadt.firebasestorage.app",
+  messagingSenderId: "260033156668",
+  appId: "1:260033156668:web:b5d43eeec8f99f66abd539"
+};
+const fbApp = initializeApp(FIREBASE_CONFIG);
+const db    = getFirestore(fbApp);
+// Helpers: escuchar colección en tiempo real
+function useColeccion(nombre) {
+  const [datos, setDatos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, nombre), snap => {
+      setDatos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setCargando(false);
+    });
+    return unsub;
+  }, [nombre]);
+  return [datos, cargando];
+}
+async function fbAgregar(col, item) {
+  const { id, ...data } = item;
+  return addDoc(collection(db, col), data);
+}
+async function fbActualizar(col, id, cambios) {
+  return updateDoc(doc(db, col, id), cambios);
+}
+async function fbEliminar(col, id) {
+  return deleteDoc(doc(db, col, id));
+}
 
 // ─── CONFIG EMAILJS ── edita con tus datos de emailjs.com ────────────────────
 const EMAILJS_CONFIG = {
@@ -11,18 +48,20 @@ const EMAILJS_CONFIG = {
 
 // Lista de todo el equipo (nombre → correo)
 const CORREOS = {
-  "Responsable 1": "correo1@tuempresa.cl",
-  "Responsable 2": "correo2@tuempresa.cl",
-  "Responsable 3": "correo3@tuempresa.cl",
-  "Responsable 4": "correo4@tuempresa.cl",
-  "Responsable 5": "correo5@tuempresa.cl",
+  "Macarena Godoy": "macarena.godoy@redsalud.gob.cl",
+  "Carlos Faunes": "carlos.faunes@redsalud.gob.cl",
+  "Constanza Jara": "constanza.jarau@redsalud.gob.cl",
+  "Nadia Rufatt": "nadia.rufatt@redsalud.gob.cl",
+  "Tomas Chavez": "tomas.chavez.g@redsalud.gob.cl",
+  "Sebastian Soto": "sebastian.soto.c@redsalud.gob.cl",
 };
 
 // Sólo las 2 jefaturas que reciben alertas SOE
 const JEFATURAS = {
-  "Jefatura 1": "jefatura1@tuempresa.cl",
-  "Jefatura 2": "jefatura2@tuempresa.cl",
+  "Jefatura 1": "correo.jefatura1@redsalud.gob.cl",
+  "Jefatura 2": "correo.jefatura2@redsalud.gob.cl",
 };
+
 
 // ─── EmailJS helper ───────────────────────────────────────────────────────────
 async function enviarCorreo(templateId, params) {
@@ -168,7 +207,7 @@ function Toast({ msg, ok, onClose }) {
 }
 
 // ─── KANBAN ───────────────────────────────────────────────────────────────────
-function KanbanModule({ tareas, setTareas, addToast }) {
+function KanbanModule({ tareas, fb, addToast }) {
   const [showForm, setShowForm] = useState(false);
   const [dragId, setDragId] = useState(null);
   const [dragOver, setDragOver] = useState(null);
@@ -182,8 +221,9 @@ function KanbanModule({ tareas, setTareas, addToast }) {
   async function agregarTarea() {
     if (!form.titulo || !form.fechaTermino) return;
     setSending(true);
-    const nueva = { ...form, id: uid() };
-    setTareas(prev => [...prev, nueva]);
+    const nueva = { ...form };
+    delete nueva.id;
+    await fb.agregar(nueva);
     // Descarga automática del .ics para Outlook
     descargarICS({
       titulo: nueva.titulo,
@@ -199,9 +239,9 @@ function KanbanModule({ tareas, setTareas, addToast }) {
     setShowForm(false);
   }
 
-  function cambiarEstado(id, e) { setTareas(prev => prev.map(t => t.id === id ? { ...t, estado: e } : t)); }
+  function cambiarEstado(id, e) { fb.actualizar(id, { estado: e }); }
   function onDrop(e) { if (!dragId) return; cambiarEstado(dragId, e); setDragId(null); setDragOver(null); }
-  function eliminar(id) { setTareas(prev => prev.filter(t => t.id !== id)); }
+  function eliminar(id) { fb.eliminar(id); }
 
   function DiasTag({ fechaTermino, estado }) {
     if (estado === "completado") return null;
@@ -355,14 +395,15 @@ function KanbanModule({ tareas, setTareas, addToast }) {
 }
 
 // ─── VISITAS ──────────────────────────────────────────────────────────────────
-function VisitasModule({ visitas, setVisitas }) {
+function VisitasModule({ visitas, fb }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ fecha: hoy(), lugar: "", responsable: RESPONSABLES[0], objetivo: "", resultado: "", estado: "programada" });
   const VEST_COLOR = { programada: G.accent, en_curso: G.accentOrange, realizada: G.accentGreen, cancelada: G.accentRed };
-  function guardar() {
+  async function guardar() {
     if (!form.lugar || !form.objetivo) return;
-    const nueva = { ...form, id: uid() };
-    setVisitas(prev => [...prev, nueva]);
+    const nueva = { ...form };
+    delete nueva.id;
+    await fb.agregar(nueva);
     // Descarga automática del .ics para Outlook
     descargarICS({
       titulo: `Visita: ${nueva.lugar}`,
@@ -420,7 +461,7 @@ function VisitasModule({ visitas, setVisitas }) {
                 style={{ fontSize: 9, color: G.accentOrange, background: "transparent", border: `1px solid ${G.accentOrange}44`, borderRadius: 3, padding: "2px 7px", cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.04em" }}>
                 📅 Descargar .ics (Outlook)
               </button>
-              <button onClick={() => setVisitas(prev => prev.filter(x => x.id !== v.id))} style={{ ...css.btn("danger"), padding: "4px 10px", fontSize: 10 }}>Eliminar</button>
+              <button onClick={() => fb.eliminar(v.id)} style={{ ...css.btn("danger"), padding: "4px 10px", fontSize: 10 }}>Eliminar</button>
             </div>
           </div>
         ))}
@@ -438,7 +479,7 @@ function VisitasModule({ visitas, setVisitas }) {
 }
 
 // ─── SOE ──────────────────────────────────────────────────────────────────────
-function SOEModule({ soe, setSoe }) {
+function SOEModule({ soe, fb }) {
   const [showForm, setShowForm] = useState(false);
   const [jefatura, setJefatura] = useState(null);
   const [nombreJef, setNombreJef] = useState("");
@@ -447,7 +488,7 @@ function SOEModule({ soe, setSoe }) {
   async function guardar() {
     if (!form.descripcion) return;
     const nueva = { ...form, id: uid() };
-    setSoe(prev => [...prev, nueva]);
+    await fb.agregar(nueva);
     await notificarSOEJefaturas(nueva);
     setForm({ fecha: hoy(), solicitante: RESPONSABLES[0], descripcion: "", horasExtra: 1, estado: "pendiente", aprobadaPor: "", observacion: "" });
     setShowForm(false);
@@ -455,12 +496,12 @@ function SOEModule({ soe, setSoe }) {
   function abrirResolver(s) { setJefatura(s); setNombreJef(""); }
   function aprobar(id) {
     if (!nombreJef.trim()) { alert("Debe ingresar el nombre de quien autoriza."); return; }
-    setSoe(prev => prev.map(s => s.id === id ? { ...s, estado: "aprobada", aprobadaPor: nombreJef.trim() } : s));
+    fb.actualizar(id, { estado: 'aprobada', aprobadaPor: nombreJef.trim() });
     setJefatura(null); setNombreJef("");
   }
   function rechazar(id, obs) {
     if (!nombreJef.trim()) { alert("Debe ingresar el nombre de quien resuelve."); return; }
-    setSoe(prev => prev.map(s => s.id === id ? { ...s, estado: "rechazada", aprobadaPor: nombreJef.trim(), observacion: obs } : s));
+    fb.actualizar(id, { estado: 'rechazada', aprobadaPor: nombreJef.trim(), observacion: obs });
     setJefatura(null); setNombreJef("");
   }
   return (
@@ -541,14 +582,15 @@ function SOEModule({ soe, setSoe }) {
 }
 
 // ─── CONTINGENCIAS ────────────────────────────────────────────────────────────
-function ContingenciasModule({ contingencias, setContingencias }) {
+function ContingenciasModule({ contingencias, fb }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ fecha: hoy(), reportadoPor: RESPONSABLES[0], descripcion: "", impacto: "medio", accionTomada: "", tiempoAfectado: 0, estado: "activa" });
   const IMP_COLOR = { bajo: G.accentGreen, medio: G.accentYellow, alto: G.accentRed };
   const CONT_COLOR = { activa: G.accentRed, en_proceso: G.accentOrange, resuelta: G.accentGreen };
-  function guardar() {
+  async function guardar() {
     if (!form.descripcion) return;
-    setContingencias(prev => [...prev, { ...form, id: uid() }]);
+    const { id: _id, ...fdata } = { ...form, id: uid() };
+    await fb.agregar(fdata);
     setForm({ fecha: hoy(), reportadoPor: RESPONSABLES[0], descripcion: "", impacto: "medio", accionTomada: "", tiempoAfectado: 0, estado: "activa" });
     setShowForm(false);
   }
@@ -596,7 +638,7 @@ function ContingenciasModule({ contingencias, setContingencias }) {
             <div style={{ fontSize: 11, color: G.textMuted, marginBottom: 4 }}>📅 {c.fecha} · 👤 {c.reportadoPor}</div>
             {c.tiempoAfectado > 0 && <div style={{ fontSize: 11, color: G.accentYellow }}>⏱ {c.tiempoAfectado} min afectados</div>}
             {c.accionTomada && <div style={{ fontSize: 11, color: G.accentGreen, marginTop: 6 }}>✓ {c.accionTomada}</div>}
-            {c.estado !== "resuelta" && <button onClick={() => setContingencias(prev => prev.map(x => x.id === c.id ? { ...x, estado: "resuelta" } : x))} style={{ marginTop: 10, ...css.btn("success"), padding: "4px 10px", fontSize: 10 }}>Marcar resuelta</button>}
+            {c.estado !== "resuelta" && <button onClick={() => fb.actualizar(c.id, { estado: 'resuelta' })} style={{ marginTop: 10, ...css.btn("success"), padding: "4px 10px", fontSize: 10 }}>Marcar resuelta</button>}
           </div>
         ))}
         {contingencias.length === 0 && <div style={{ color: G.textDim, fontSize: 11, padding: 20 }}>No hay contingencias registradas.</div>}
@@ -723,12 +765,33 @@ const MODULOS = [
 
 export default function App() {
   const [modulo, setModulo] = useState("dashboard");
-  const [tareas, setTareas] = useState([]);
-  const [visitas, setVisitas] = useState([]);
-  const [soe, setSoe] = useState([]);
-  const [contingencias, setContingencias] = useState([]);
+  const [tareas,        cargandoTareas] = useColeccion("tareas");
+  const [visitas,       cargandoVis]   = useColeccion("visitas");
+  const [soe,           cargandoSoe]   = useColeccion("soe");
+  const [contingencias, cargandoCont]  = useColeccion("contingencias");
   const [toast, setToast] = useState(null);
   const addToast = useCallback((msg, ok = true) => setToast({ msg, ok }), []);
+  const cargando = cargandoTareas || cargandoVis || cargandoSoe || cargandoCont;
+
+  // Funciones Firebase para pasar a módulos hijos
+  const fbTareas = {
+    agregar: (item) => fbAgregar("tareas", item),
+    actualizar: (id, cambios) => fbActualizar("tareas", id, cambios),
+    eliminar: (id) => fbEliminar("tareas", id),
+  };
+  const fbVisitas = {
+    agregar: (item) => fbAgregar("visitas", item),
+    eliminar: (id) => fbEliminar("visitas", id),
+    actualizar: (id, cambios) => fbActualizar("visitas", id, cambios),
+  };
+  const fbSoe = {
+    agregar: (item) => fbAgregar("soe", item),
+    actualizar: (id, cambios) => fbActualizar("soe", id, cambios),
+  };
+  const fbCont = {
+    agregar: (item) => fbAgregar("contingencias", item),
+    actualizar: (id, cambios) => fbActualizar("contingencias", id, cambios),
+  };
 
   useEffect(() => {
     const alertadas = JSON.parse(sessionStorage.getItem("alertasVenc") || "[]");
@@ -745,6 +808,13 @@ export default function App() {
   const soePendientes = soe.filter(s => s.estado === "pendiente").length;
   const contActivas = contingencias.filter(c => c.estado === "activa").length;
   const tareasUrgentes = tareas.filter(t => t.estado !== "completado" && diasHasta(t.fechaTermino) <= 3).length;
+
+  if (cargando) return (
+    <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+      <div style={{ fontSize: 28 }}>⬡</div>
+      <div style={{ fontSize: 12, color: G.textDim, letterSpacing: "0.1em" }}>CARGANDO DATOS...</div>
+    </div>
+  );
 
   return (
     <div style={css.app}>
@@ -767,11 +837,11 @@ export default function App() {
         <div style={{ fontSize: 10, color: G.textDim }}>{new Date().toLocaleDateString("es-CL", { weekday:"short", day:"numeric", month:"short", year:"numeric" })}</div>
       </header>
       <main style={css.main}>
-        {modulo === "dashboard" && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
-        {modulo === "kanban" && <KanbanModule tareas={tareas} setTareas={setTareas} addToast={addToast} />}
-        {modulo === "visitas" && <VisitasModule visitas={visitas} setVisitas={setVisitas} />}
-        {modulo === "soe" && <SOEModule soe={soe} setSoe={setSoe} />}
-        {modulo === "contingencias" && <ContingenciasModule contingencias={contingencias} setContingencias={setContingencias} />}
+        {modulo === "dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
+        {modulo === "kanban"        && <KanbanModule tareas={tareas} fb={fbTareas} addToast={addToast} />}
+        {modulo === "visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} />}
+        {modulo === "soe"           && <SOEModule soe={soe} fb={fbSoe} />}
+        {modulo === "contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} />}
       </main>
       {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
     </div>
