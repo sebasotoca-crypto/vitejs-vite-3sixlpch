@@ -39,11 +39,11 @@ async function fbEliminar(col, id) {
 
 // ─── CONFIG EMAILJS ── edita con tus datos de emailjs.com ────────────────────
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "TU_SERVICE_ID",
-  TEMPLATE_ASIGNACION: "TU_TEMPLATE_ASIGNACION_ID",
-  TEMPLATE_VENCIMIENTO: "TU_TEMPLATE_VENCIMIENTO_ID",
+  SERVICE_ID: "gestion_operativa",
+  TEMPLATE_ASIGNACION: "template_04yxyyn",
+  TEMPLATE_VENCIMIENTO: "template_n68j7it",
   TEMPLATE_SOE: "TU_TEMPLATE_SOE_ID",
-  PUBLIC_KEY: "TU_PUBLIC_KEY",
+  PUBLIC_KEY: "Mt6cb7NrWs_-YsfPP",
 };
 
 // Lista de todo el equipo (nombre → correo)
@@ -55,13 +55,11 @@ const CORREOS = {
   "Tomas Chavez": "tomas.chavez.g@redsalud.gob.cl",
   "Sebastian Soto": "sebastian.soto.c@redsalud.gob.cl",
 };
-
 // Sólo las 2 jefaturas que reciben alertas SOE
 const JEFATURAS = {
-  "Jefatura 1": "correo.jefatura1@redsalud.gob.cl",
-  "Jefatura 2": "correo.jefatura2@redsalud.gob.cl",
+  "Macarena Godoy": "macarena.godoy@redsalud.gob.cl",
+  "Sebastian Soto": "sebastian.soto.c@redsalud.gob.cl",
 };
-
 
 // ─── EmailJS helper ───────────────────────────────────────────────────────────
 async function enviarCorreo(templateId, params) {
@@ -98,31 +96,34 @@ async function notificarSOEJefaturas(solicitud) {
   return resultados.some(Boolean);
 }
 
-// ─── Paleta ───────────────────────────────────────────────────────────────────
+// ─── Paleta: Blanco + Azul institucional ─────────────────────────────────────
 const G = {
-  bg: "#0d1117", surface: "#161b22", surfaceHover: "#1c2128",
-  border: "#30363d", borderLight: "#21262d",
-  accent: "#58a6ff", accentGreen: "#3fb950", accentOrange: "#f0883e",
-  accentRed: "#f85149", accentPurple: "#bc8cff", accentYellow: "#d29922",
-  text: "#e6edf3", textMuted: "#8b949e", textDim: "#484f58",
+  bg: "#F7F8FC", surface: "#FFFFFF", surfaceHover: "#F0F4FF",
+  border: "#DDE2EF", borderLight: "#EEF1F8",
+  accent: "#1A56DB", accentLight: "#EBF0FD",
+  accentGreen: "#057A55", accentGreenLight: "#E3F8EE",
+  accentOrange: "#C27803", accentOrangeLight: "#FDF3E3",
+  accentRed: "#C81E1E", accentRedLight: "#FDE8E8",
+  accentPurple: "#6C2BD9", accentYellow: "#92400E",
+  text: "#111928", textMuted: "#6B7280", textDim: "#9CA3AF",
 };
 const css = {
-  app: { fontFamily: "'IBM Plex Mono','Courier New',monospace", background: G.bg, color: G.text, minHeight: "100vh", display: "flex", flexDirection: "column" },
-  header: { background: G.surface, borderBottom: `1px solid ${G.border}`, padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 },
-  logoText: { fontSize: 13, fontWeight: 700, color: G.accent, letterSpacing: "0.08em", textTransform: "uppercase" },
+  app: { fontFamily: "'Inter','Segoe UI',system-ui,sans-serif", background: G.bg, color: G.text, minHeight: "100vh", display: "flex", flexDirection: "column" },
+  header: { background: "#FFFFFF", borderBottom: `1px solid ${G.border}`, padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" },
+  logoText: { fontSize: 15, fontWeight: 700, color: G.accent, letterSpacing: "0.01em" },
   nav: { display: "flex", gap: 4, flexWrap: "wrap" },
-  navBtn: (a) => ({ padding: "6px 14px", fontSize: 11, fontFamily: "inherit", fontWeight: a ? 700 : 400, background: a ? G.accent : "transparent", color: a ? "#000" : G.textMuted, border: `1px solid ${a ? G.accent : G.border}`, borderRadius: 4, cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase", transition: "all .15s" }),
-  main: { flex: 1, padding: "24px", maxWidth: 1400, width: "100%", margin: "0 auto" },
-  sectionTitle: { fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: G.textMuted, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 },
-  badge: (c) => ({ display: "inline-block", padding: "2px 8px", borderRadius: 3, fontSize: 10, fontWeight: 700, background: c + "22", color: c, border: `1px solid ${c}44`, letterSpacing: "0.06em", textTransform: "uppercase" }),
-  card: { background: G.surface, border: `1px solid ${G.border}`, borderRadius: 6, padding: 14, marginBottom: 10, cursor: "grab", transition: "border-color .15s, box-shadow .15s" },
-  input: { background: G.bg, border: `1px solid ${G.border}`, borderRadius: 4, color: G.text, padding: "8px 12px", fontSize: 12, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box" },
-  select: { background: G.bg, border: `1px solid ${G.border}`, borderRadius: 4, color: G.text, padding: "8px 12px", fontSize: 12, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box", cursor: "pointer" },
-  btn: (v = "primary") => ({ padding: "8px 18px", fontSize: 11, fontFamily: "inherit", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid", borderRadius: 4, cursor: "pointer", transition: "all .15s", ...(v === "primary" ? { background: G.accent, color: "#000", borderColor: G.accent } : v === "success" ? { background: G.accentGreen, color: "#000", borderColor: G.accentGreen } : v === "danger" ? { background: "transparent", color: G.accentRed, borderColor: G.accentRed } : { background: "transparent", color: G.textMuted, borderColor: G.border }) }),
-  label: { fontSize: 10, color: G.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, display: "block" },
-  formGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
-  modal: { position: "fixed", inset: 0, background: "#000b", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 },
-  modalBox: { background: G.surface, border: `1px solid ${G.border}`, borderRadius: 8, padding: 24, width: 560, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" },
+  navBtn: (a) => ({ padding: "7px 16px", fontSize: 12, fontFamily: "inherit", fontWeight: a ? 600 : 400, background: a ? G.accent : "transparent", color: a ? "#fff" : G.textMuted, border: `1px solid ${a ? G.accent : G.border}`, borderRadius: 6, cursor: "pointer", transition: "all .15s" }),
+  main: { flex: 1, padding: "28px", maxWidth: 1400, width: "100%", margin: "0 auto" },
+  sectionTitle: { fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 },
+  badge: (c) => ({ display: "inline-block", padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, background: c + "18", color: c, border: `1px solid ${c}33` }),
+  card: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 10, padding: 16, marginBottom: 10, cursor: "grab", transition: "box-shadow .15s", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
+  input: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 6, color: G.text, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box", transition: "border-color .15s" },
+  select: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 6, color: G.text, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box", cursor: "pointer" },
+  btn: (v = "primary") => ({ padding: "9px 20px", fontSize: 13, fontFamily: "inherit", fontWeight: 600, border: "1px solid", borderRadius: 6, cursor: "pointer", transition: "all .15s", ...(v === "primary" ? { background: G.accent, color: "#fff", borderColor: G.accent } : v === "success" ? { background: G.accentGreen, color: "#fff", borderColor: G.accentGreen } : v === "danger" ? { background: "transparent", color: G.accentRed, borderColor: G.accentRed } : { background: "transparent", color: G.textMuted, borderColor: G.border }) }),
+  label: { fontSize: 12, color: G.textMuted, fontWeight: 500, marginBottom: 5, display: "block" },
+  formGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
+  modal: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 },
+  modalBox: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 12, padding: 28, width: 580, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" },
 };
 
 const RESPONSABLES = [...Object.keys(CORREOS), ...Object.keys(JEFATURAS)];
@@ -130,7 +131,7 @@ const PRIORIDADES = ["baja", "media", "alta"];
 const ESTADOS = ["pendiente", "en_progreso", "revision", "completado"];
 const ESTADO_LABELS = { pendiente: "Pendiente", en_progreso: "En Progreso", revision: "Revisión", completado: "Completado" };
 const ESTADO_ICONS = { pendiente: "○", en_progreso: "◑", revision: "◕", completado: "●" };
-const PRIORIDAD_COLOR = { baja: G.accentGreen, media: G.accentYellow, alta: G.accentRed };
+const PRIORIDAD_COLOR = { baja: G.accentGreen, media: G.accentOrange, alta: G.accentRed };
 const ESTADO_COLOR = { pendiente: G.textMuted, en_progreso: G.accent, revision: G.accentOrange, completado: G.accentGreen };
 
 function uid() { return Math.random().toString(36).slice(2, 9); }
@@ -190,17 +191,17 @@ function Field({ label, children }) {
 }
 function StatCard({ label, value, color, sub }) {
   return (
-    <div style={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 6, padding: 20 }}>
-      <div style={{ fontSize: 10, color: G.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 32, fontWeight: 700, color: color || G.text, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: G.textMuted, marginTop: 6 }}>{sub}</div>}
+    <div style={{ background: "#fff", border: `1px solid ${G.border}`, borderRadius: 10, padding: "18px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+      <div style={{ fontSize: 12, color: G.textMuted, fontWeight: 500, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 30, fontWeight: 700, color: color || G.accent, lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: G.textDim, marginTop: 6 }}>{sub}</div>}
     </div>
   );
 }
 function Toast({ msg, ok, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, background: ok ? G.accentGreen + "ee" : G.accentRed + "ee", color: "#000", padding: "12px 20px", borderRadius: 6, fontSize: 12, fontFamily: "inherit", zIndex: 9999, fontWeight: 700, maxWidth: 320 }}>
+    <div style={{ position: "fixed", bottom: 24, right: 24, background: ok ? G.accentGreen : G.accentRed, color: "#fff", padding: "12px 20px", borderRadius: 8, fontSize: 13, fontFamily: "inherit", zIndex: 9999, fontWeight: 600, maxWidth: 320, boxShadow: "0 4px 16px rgba(0,0,0,0.15)" }}>
       {ok ? "✓" : "✗"} {msg}
     </div>
   );
@@ -299,13 +300,13 @@ function KanbanModule({ tareas, fb, addToast }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
         {ESTADOS.map(estado => (
           <div key={estado}
-            style={{ background: dragOver === estado ? G.surfaceHover : G.bg, border: `1px solid ${dragOver === estado ? G.accent : G.borderLight}`, borderRadius: 8, padding: 12, minHeight: 400, transition: "all .15s" }}
+            style={{ background: dragOver === estado ? G.accentLight : "#F7F8FC", border: `2px solid ${dragOver === estado ? G.accent : G.border}`, borderRadius: 10, padding: 12, minHeight: 400, transition: "all .15s" }}
             onDragOver={e => { e.preventDefault(); setDragOver(estado); }}
             onDragLeave={() => setDragOver(null)}
             onDrop={() => onDrop(estado)}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: ESTADO_COLOR[estado], fontWeight: 700 }}>{ESTADO_ICONS[estado]} {ESTADO_LABELS[estado]}</div>
+              <div style={{ fontSize: 12, color: ESTADO_COLOR[estado], fontWeight: 600 }}>{ESTADO_ICONS[estado]} {ESTADO_LABELS[estado]}</div>
               <span style={{ fontSize: 11, color: G.textDim, background: G.border + "55", padding: "1px 7px", borderRadius: 99 }}>{byEstado[estado].length}</span>
             </div>
             {byEstado[estado].map(tarea => {
@@ -397,8 +398,7 @@ function KanbanModule({ tareas, fb, addToast }) {
 // ─── VISITAS ──────────────────────────────────────────────────────────────────
 function VisitasModule({ visitas, fb }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ fecha: hoy(), lugar: "", responsable: RESPONSABLES[0], objetivo: "", resultado: "", estado: "programada" });
-  const VEST_COLOR = { programada: G.accent, en_curso: G.accentOrange, realizada: G.accentGreen, cancelada: G.accentRed };
+  const [form, setForm] = useState({ fecha: hoy(), lugar: "", responsable: RESPONSABLES[0], objetivo: "", resultado: "" });
   async function guardar() {
     if (!form.lugar || !form.objetivo) return;
     const nueva = { ...form };
@@ -413,7 +413,7 @@ function VisitasModule({ visitas, fb }) {
       responsable: nueva.responsable,
       lugar: nueva.lugar,
     }, `Visita_${nueva.lugar}`);
-    setForm({ fecha: hoy(), lugar: "", responsable: RESPONSABLES[0], objetivo: "", resultado: "", estado: "programada" });
+    setForm({ fecha: hoy(), lugar: "", responsable: RESPONSABLES[0], objetivo: "", resultado: "" });
     setShowForm(false);
   }
   return (
@@ -437,7 +437,7 @@ function VisitasModule({ visitas, fb }) {
               <Field label="Lugar *"><input style={css.input} value={form.lugar} onChange={e => setForm(p => ({ ...p, lugar: e.target.value }))} placeholder="Dirección o nombre del lugar..." /></Field>
               <Field label="Objetivo *"><textarea style={{ ...css.input, minHeight: 60, resize: "vertical" }} value={form.objetivo} onChange={e => setForm(p => ({ ...p, objetivo: e.target.value }))} placeholder="Objetivo de la visita..." /></Field>
               <Field label="Resultado"><textarea style={{ ...css.input, minHeight: 60, resize: "vertical" }} value={form.resultado} onChange={e => setForm(p => ({ ...p, resultado: e.target.value }))} placeholder="Resultado obtenido..." /></Field>
-              <Field label="Estado"><select style={css.select} value={form.estado} onChange={e => setForm(p => ({ ...p, estado: e.target.value }))}>{["programada","en_curso","realizada","cancelada"].map(e => <option key={e} value={e}>{e.replace("_"," ")}</option>)}</select></Field>
+
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                 <button style={css.btn("ghost")} onClick={() => setShowForm(false)}>Cancelar</button>
                 <button style={css.btn("success")} onClick={guardar}>Registrar</button>
@@ -449,9 +449,8 @@ function VisitasModule({ visitas, fb }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 16 }}>
         {visitas.map(v => (
           <div key={v.id} style={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 6, padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>{v.lugar}</span>
-              <span style={css.badge(VEST_COLOR[v.estado] || G.textMuted)}>{v.estado.replace("_"," ")}</span>
+            <div style={{ marginBottom: 10 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: G.text }}>{v.lugar}</span>
             </div>
             <div style={{ fontSize: 11, color: G.textMuted, marginBottom: 6 }}>📅 {v.fecha} · 👤 {v.responsable}</div>
             <div style={{ fontSize: 11, marginBottom: v.resultado ? 8 : 0 }}><span style={{ color: G.textMuted }}>Objetivo: </span>{v.objetivo}</div>
@@ -689,7 +688,7 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
         <StatCard label="Contingencias" value={stats.contingenciasActivas} color={G.accentRed} sub={`${stats.minutosAfectados} min afectados`} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-        <div style={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 6, padding: 20 }}>
+        <div style={{ background: "#fff", border: `1px solid ${G.border}`, borderRadius: 10, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
           <div style={{ fontSize: 10, color: G.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Tareas por Estado</div>
           {ESTADOS.map(e => { const count = tareas.filter(t => t.estado === e).length; const pct = tareas.length > 0 ? (count / tareas.length) * 100 : 0; return (
             <div key={e} style={{ marginBottom: 12 }}>
@@ -698,7 +697,7 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
             </div>
           ); })}
         </div>
-        <div style={{ background: G.surface, border: `1px solid ${G.border}`, borderRadius: 6, padding: 20 }}>
+        <div style={{ background: "#fff", border: `1px solid ${G.border}`, borderRadius: 10, padding: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
           <div style={{ fontSize: 10, color: G.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Carga por Responsable</div>
           {barData.map(b => (
             <div key={b.name} style={{ marginBottom: 12 }}>
@@ -725,7 +724,29 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
           })}
         </div>
       )}
-      <div style={css.sectionTitle}><span style={{ color: G.accentRed }}>⚠</span> Alertas Activas</div>
+      <div style={css.sectionTitle}>📋 Próximas Visitas</div>
+      <div style={{ background: "#fff", border: `1px solid ${G.border}`, borderRadius: 10, padding: 20, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        {visitas.length === 0 ? (
+          <div style={{ color: G.textDim, fontSize: 13 }}>No hay visitas registradas.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[...visitas].sort((a,b) => a.fecha.localeCompare(b.fecha)).slice(0, 5).map(v => (
+              <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: G.bg, borderRadius: 8, border: `1px solid ${G.border}` }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{v.lugar}</div>
+                  <div style={{ fontSize: 12, color: G.textMuted, marginTop: 2 }}>👤 {v.responsable} · {v.objetivo}</div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: G.accent }}>📅 {v.fecha}</div>
+                  {diasHasta(v.fecha) >= 0 && <div style={{ fontSize: 11, color: G.textDim, marginTop: 2 }}>{diasHasta(v.fecha) === 0 ? "Hoy" : `en ${diasHasta(v.fecha)} día(s)`}</div>}
+                </div>
+              </div>
+            ))}
+            {visitas.length > 5 && <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center" }}>+{visitas.length - 5} visitas más — ver módulo Visitas</div>}
+          </div>
+        )}
+      </div>
+      <div style={css.sectionTitle}>⚠ Alertas Activas</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32 }}>
         {stats.vencidas > 0 && <div style={{ background:G.accentRed+"11", border:`1px solid ${G.accentRed}33`, borderRadius:4, padding:"10px 14px", fontSize:11, color:G.accentRed }}>🔴 {stats.vencidas} tarea(s) VENCIDA(s) sin completar</div>}
         {stats.porVencer > 0 && <div style={{ background:G.accentOrange+"11", border:`1px solid ${G.accentOrange}33`, borderRadius:4, padding:"10px 14px", fontSize:11, color:G.accentOrange }}>⏰ {stats.porVencer} tarea(s) vence(n) en ≤ 3 días</div>}
@@ -811,18 +832,18 @@ export default function App() {
 
   if (cargando) return (
     <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
-      <div style={{ fontSize: 28 }}>⬡</div>
-      <div style={{ fontSize: 12, color: G.textDim, letterSpacing: "0.1em" }}>CARGANDO DATOS...</div>
+      <div style={{ fontSize: 36, color: G.accent }}>⬡</div>
+      <div style={{ fontSize: 14, color: G.textMuted, fontWeight: 500 }}>Cargando datos...</div>
     </div>
   );
 
   return (
     <div style={css.app}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap'); *{box-sizing:border-box} ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:#0d1117} ::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); *{box-sizing:border-box} body{margin:0} ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:#F7F8FC} ::-webkit-scrollbar-thumb{background:#DDE2EF;border-radius:3px} input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.6}`}</style>
       <header style={css.header}>
         <div>
-          <div style={css.logoText}>⬡ GESTIÓN OPERATIVA</div>
-          <div style={{ fontSize: 9, color: G.textDim, letterSpacing: "0.06em", marginTop: 2 }}>DEPARTAMENTO APOYO DIAGNÓSTICO Y TERAPÉUTICO</div>
+          <div style={css.logoText}>⬡ Gestión Operativa</div>
+          <div style={{ fontSize: 11, color: G.textMuted, marginTop: 2 }}>Departamento Apoyo Diagnóstico y Terapéutico</div>
         </div>
         <nav style={css.nav}>
           {MODULOS.map(m => (
