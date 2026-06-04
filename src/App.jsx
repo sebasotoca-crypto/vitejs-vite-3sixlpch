@@ -1354,6 +1354,12 @@ function SOEModule({ soe, fb, addToast }) {
 
   function abrirResolver(s) { setJefatura(s); setNombreJef(""); setObsJef(""); }
 
+  function eliminar(id) {
+    if (!window.confirm("¿Eliminar esta solicitud? Esta acción no se puede deshacer.")) return;
+    fb.eliminar(id);
+    addToast("Solicitud eliminada.");
+  }
+
   async function aprobar(id) {
     if (!nombreJef.trim()) { alert("Debe ingresar el nombre de quien autoriza."); return; }
     await fb.actualizar(id, {
@@ -1458,6 +1464,7 @@ function SOEModule({ soe, fb, addToast }) {
               {s.observacion && <div style={{ fontSize:11, color:G.textMuted, marginTop:4, fontStyle:"italic" }}>"{s.observacion}"</div>}
             </div>
             {s.estado==="pendiente"&&<button style={{ ...css.btn("primary"), marginLeft:16, whiteSpace:"nowrap" }} onClick={()=>abrirResolver(s)}>Resolver ▸</button>}
+            <button title="Eliminar solicitud" onClick={()=>eliminar(s.id)} style={{ background:"none", border:"none", color:G.textDim, cursor:"pointer", fontSize:18, marginLeft:8, padding:0, flexShrink:0 }}>×</button>
           </div>
         ))}
         {soe.length===0&&<div style={{ color:G.textDim, fontSize:11, padding:20 }}>No hay solicitudes registradas.</div>}
@@ -1468,7 +1475,7 @@ function SOEModule({ soe, fb, addToast }) {
         <div style={css.sectionTitle}><span style={{ color:G.accentGreen }}>⊞</span> Registro SOE</div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Solicitante","Descripción","Horas","Estado","Resuelto por","Timestamp resolución"].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Solicitante","Descripción","Horas","Estado","Resuelto por","Timestamp resolución",""].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
             <tbody>{soe.map(s=>(
               <tr key={s.id} style={{ borderBottom:`1px solid ${G.borderLight}` }}>
                 <td style={{ padding:"8px 12px" }}>{s.fecha}</td>
@@ -1478,6 +1485,7 @@ function SOEModule({ soe, fb, addToast }) {
                 <td style={{ padding:"8px 12px" }}><span style={css.badge(SOE_COLOR[s.estado]||G.textMuted)}>{s.estado}</span></td>
                 <td style={{ padding:"8px 12px",color:G.textMuted }}>{s.aprobadaPor||"—"}</td>
                 <td style={{ padding:"8px 12px",color:G.textDim,fontSize:10 }}>{fmtTs(s.timestampAprobacion)}</td>
+                <td style={{ padding:"8px 12px" }}><button title="Eliminar" onClick={()=>eliminar(s.id)} style={{ background:"none", border:"none", color:G.textDim, cursor:"pointer", fontSize:16, padding:0 }}>×</button></td>
               </tr>
             ))}</tbody>
           </table>
