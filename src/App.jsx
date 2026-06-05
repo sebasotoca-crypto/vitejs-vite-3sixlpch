@@ -716,11 +716,84 @@ function AlertaDiaria({ tareas, onCerrar }) {
   );
 }
 
+// ─── FORM COMPONENTS (top-level to avoid focus loss on re-render) ─────────────
+function FormTarea({ titulo, data, setData, onGuardar, onCancelar, guardando }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <Field label="Título *"><input style={css.input} value={data.titulo} onChange={e=>setData(p=>({...p,titulo:e.target.value}))} placeholder="Descripción breve..." /></Field>
+      <div style={css.formGrid}>
+        <Field label="Responsable"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+        <Field label="Prioridad"><select style={css.select} value={data.prioridad} onChange={e=>setData(p=>({...p,prioridad:e.target.value}))}>{PRIORIDADES.map(p=><option key={p}>{p}</option>)}</select></Field>
+        <Field label="Fecha Inicio"><input type="date" style={css.input} value={data.fechaInicio} onChange={e=>setData(p=>({...p,fechaInicio:e.target.value}))} /></Field>
+        <Field label="Fecha Término *"><input type="date" style={css.input} value={data.fechaTermino} onChange={e=>setData(p=>({...p,fechaTermino:e.target.value}))} /></Field>
+      </div>
+      <Field label="Estado">
+        <select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>
+          {ESTADOS.map(e=><option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
+        </select>
+      </Field>
+      <Field label="Descripción"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.descripcion||""} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="Detalles adicionales..." /></Field>
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:8 }}>
+        <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+        <button style={css.btn("primary")} onClick={onGuardar} disabled={guardando}>{guardando?"Guardando...":titulo}</button>
+      </div>
+    </div>
+  );
+}
+
+function FormReunion({ data, setData, onGuardar, onCancelar, tituloBoton }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <Field label="Título *"><input style={css.input} value={data.titulo} onChange={e=>setData(p=>({...p,titulo:e.target.value}))} placeholder="Nombre de la reunión..." /></Field>
+      <div style={css.formGrid}>
+        <Field label="Fecha *"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
+        <Field label="Hora"><input type="time" style={css.input} value={data.hora||"09:00"} onChange={e=>setData(p=>({...p,hora:e.target.value}))} /></Field>
+        <Field label="Duración estimada (min)"><input type="number" min={15} max={480} step={15} style={css.input} value={data.duracion||60} onChange={e=>setData(p=>({...p,duracion:+e.target.value}))} /></Field>
+        <Field label="Responsable / Moderador"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+        <Field label="Estado"><select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>{REUN_ESTADOS.map(e=><option key={e} value={e}>{REUN_ESTADO_LABELS[e]}</option>)}</select></Field>
+      </div>
+      <Field label="Lugar / Link"><input style={css.input} value={data.lugar||""} onChange={e=>setData(p=>({...p,lugar:e.target.value}))} placeholder="Sala, dirección o enlace Zoom/Teams..." /></Field>
+      <Field label="Participantes"><input style={css.input} value={data.participantes||""} onChange={e=>setData(p=>({...p,participantes:e.target.value}))} placeholder="Nombres separados por coma..." /></Field>
+      <Field label="Objetivo / Temario"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.objetivo||""} onChange={e=>setData(p=>({...p,objetivo:e.target.value}))} placeholder="¿Para qué es esta reunión?..." /></Field>
+      <Field label="Acuerdos / Compromisos"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.acuerdos||""} onChange={e=>setData(p=>({...p,acuerdos:e.target.value}))} placeholder="Decisiones tomadas y compromisos asumidos..." /></Field>
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+        <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+        <button style={{ ...css.btn("primary"), background:G.accentPurple, borderColor:G.accentPurple }} onClick={onGuardar}>{tituloBoton}</button>
+      </div>
+    </div>
+  );
+}
+
+function FormVisita({ data, setData, onGuardar, onCancelar, tituloBoton }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <div style={css.formGrid}>
+        <Field label="Fecha"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
+        <Field label="Responsable"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+      </div>
+      <Field label="Lugar *"><input style={css.input} value={data.lugar} onChange={e=>setData(p=>({...p,lugar:e.target.value}))} placeholder="Dirección o nombre del lugar..." /></Field>
+      <Field label="Objetivo *"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.objetivo} onChange={e=>setData(p=>({...p,objetivo:e.target.value}))} placeholder="Objetivo de la visita..." /></Field>
+      <Field label="Resultado / Observaciones"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.resultado||""} onChange={e=>setData(p=>({...p,resultado:e.target.value}))} placeholder="Resultado obtenido..." /></Field>
+      <Field label="Compromisos surgidos"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.compromisos||""} onChange={e=>setData(p=>({...p,compromisos:e.target.value}))} placeholder="Acuerdos, tareas y compromisos que surgieron en la visita..." /></Field>
+      <Field label="Estado">
+        <select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>
+          {Object.keys(VEST_COLOR).map(e=><option key={e} value={e}>{VEST_LABELS[e]}</option>)}
+        </select>
+      </Field>
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+        <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+        <button style={css.btn("success")} onClick={onGuardar}>{tituloBoton}</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── KANBAN ───────────────────────────────────────────────────────────────────
 // Mejoras: edición de tareas, búsqueda por texto, paginación por columna.
 const KANBAN_PAGE = 5; // tarjetas visibles por columna antes de "Ver más"
 
-function KanbanModule({ tareas, fb, addToast }) {
+function TareasReunionesModule({ tareas, reuniones, fbTareas, fbReuniones, addToast }) {
+  const [tipo, setTipo] = useState("tarea"); // "tarea" | "reunion"
   const [showForm,    setShowForm]    = useState(false);
   const [editTarea,   setEditTarea]   = useState(null);  // task object | null
   const [dragId,      setDragId]      = useState(null);
@@ -748,7 +821,8 @@ function KanbanModule({ tareas, fb, addToast }) {
     if (!form.titulo||!form.fechaTermino) { addToast("Completa título y fecha de término.", false); return; }
     setSending(true);
     const { id:_, ...nueva } = form;
-    await fb.agregar(nueva);
+    await fbTareas.agregar({...nueva, tipo:"tarea"});
+    await fbTareas.agregar({ tipo:"log", accion:"creada", titulo:nueva.titulo, responsable:nueva.responsable, fecha:hoy(), timestamp:new Date().toISOString() });
     descargarICS({ titulo:nueva.titulo, descripcion:nueva.descripcion, fechaInicio:nueva.fechaInicio, fechaTermino:nueva.fechaTermino, responsable:nueva.responsable }, nueva.titulo);
     const ok = await notificarAsignacion(nueva);
     addToast(ok?`Correo enviado a ${nueva.responsable}`:"Tarea creada. (Configura EmailJS para correos automáticos.)", ok);
@@ -758,16 +832,18 @@ function KanbanModule({ tareas, fb, addToast }) {
   async function guardarEdicion() {
     if (!editTarea.titulo||!editTarea.fechaTermino) { addToast("Completa título y fecha de término.", false); return; }
     const { id, ...cambios } = editTarea;
-    await fb.actualizar(id, cambios);
+    await fbTareas.actualizar(id, cambios);
     addToast("Tarea actualizada correctamente.");
     setEditTarea(null);
   }
 
-  function cambiarEstado(id, e) { fb.actualizar(id, { estado:e }); }
+  function cambiarEstado(id, e) { fbTareas.actualizar(id, { estado:e }); }
   function onDrop(e) { if (!dragId) return; cambiarEstado(dragId, e); setDragId(null); setDragOver(null); }
   function eliminar(id) {
     if (!window.confirm("¿Eliminar esta tarea? Esta acción no se puede deshacer.")) return;
-    fb.eliminar(id);
+    const t = tareas.find(x=>x.id===id);
+    fbTareas.agregar({ tipo:"log", accion:"eliminada", titulo:t?.titulo||"?", responsable:t?.responsable||"?", fecha:hoy(), timestamp:new Date().toISOString() });
+    fbTareas.eliminar(id);
     addToast("Tarea eliminada.");
   }
   function verMasCol(estado) { setPaginaCol(p => ({ ...p, [estado]: (p[estado]||KANBAN_PAGE)+KANBAN_PAGE })); }
@@ -779,42 +855,24 @@ function KanbanModule({ tareas, fb, addToast }) {
     return <span style={css.badge(c)}>{d<0?`−${Math.abs(d)}d`:d===0?"hoy":`${d}d`}</span>;
   }
 
-  function FormTarea({ titulo, data, setData, onGuardar, onCancelar, guardando }) {
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <Field label="Título *"><input style={css.input} value={data.titulo} onChange={e=>setData(p=>({...p,titulo:e.target.value}))} placeholder="Descripción breve..." /></Field>
-        <div style={css.formGrid}>
-          <Field label="Responsable"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-          <Field label="Prioridad"><select style={css.select} value={data.prioridad} onChange={e=>setData(p=>({...p,prioridad:e.target.value}))}>{PRIORIDADES.map(p=><option key={p}>{p}</option>)}</select></Field>
-          <Field label="Fecha Inicio"><input type="date" style={css.input} value={data.fechaInicio} onChange={e=>setData(p=>({...p,fechaInicio:e.target.value}))} /></Field>
-          <Field label="Fecha Término *"><input type="date" style={css.input} value={data.fechaTermino} onChange={e=>setData(p=>({...p,fechaTermino:e.target.value}))} /></Field>
-        </div>
-        <div style={css.formGrid}>
-          <Field label="Estado">
-            <select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>
-              {ESTADOS.map(e=><option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
-            </select>
-          </Field>
-          <Field label="Horas estimadas">
-            <input type="number" min={0.5} max={999} step={0.5} style={css.input} value={data.horasEstimadas||1} onChange={e=>setData(p=>({...p,horasEstimadas:parseFloat(e.target.value)||1}))} />
-          </Field>
-        </div>
-        <Field label="Descripción"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.descripcion||""} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="Detalles adicionales..." /></Field>
-        <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:8 }}>
-          <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
-          <button style={css.btn("primary")} onClick={onGuardar} disabled={guardando}>{guardando?"Guardando...":titulo}</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <div style={css.sectionTitle}><span style={{ color:G.accent }}>▦</span> Tareas</div>
-        <button style={css.btn("primary")} onClick={()=>setShowForm(true)}>+ Nueva Tarea</button>
+      {/* Selector de tipo + botón acción */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+        <div style={{ fontSize:13, fontWeight:600, color:G.text, display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ color:tipo==="tarea"?G.accent:G.accentPurple }}>{tipo==="tarea"?"▦":"◉"}</span> Tareas y Reuniones
+        </div>
+        <div style={{ display:"flex", gap:6 }}>
+          <button style={{ ...css.navBtn(tipo==="tarea"), fontSize:12 }} onClick={()=>setTipo("tarea")}>📋 Tareas</button>
+          <button style={{ ...css.navBtn(tipo==="reunion"), fontSize:12 }} onClick={()=>setTipo("reunion")}>◉ Reuniones</button>
+        </div>
+        <div style={{ marginLeft:"auto" }}>
+          {tipo==="tarea"  && <button style={css.btn("primary")} onClick={()=>setShowForm(true)}>+ Nueva Tarea</button>}
+          {tipo==="reunion"&& <button style={{ ...css.btn("primary"), background:G.accentPurple, borderColor:G.accentPurple }} onClick={()=>setShowForm(true)}>+ Nueva Reunión</button>}
+        </div>
       </div>
 
+      {tipo==="tarea" && <>
       {/* Barra de búsqueda + filtro responsable */}
       <div style={{ display:"flex", gap:10, marginBottom:12, flexWrap:"wrap", alignItems:"center" }}>
         <div style={{ position:"relative", flex:"1 1 220px", maxWidth:320 }}>
@@ -988,27 +1046,29 @@ function KanbanModule({ tareas, fb, addToast }) {
           </table>
         </div>
       </div>
+    </>}
+    {/* ── PANEL REUNIONES (rendered when tipo==="reunion") ── */}
+    <ReunionesPanel reuniones={reuniones} fbReuniones={fbReuniones} addToast={addToast} showForm={tipo==="reunion"&&showForm} setShowForm={setShowForm} tipo={tipo} />
     </div>
   );
 }
 
-// ─── REUNIONES ────────────────────────────────────────────────────────────────
+// ─── REUNIONES PANEL (rendered inside TareasReunionesModule) ──────────────────
 const REUN_ESTADOS     = ["programada", "en_progreso", "realizada", "cancelada"];
 const REUN_ESTADO_LABELS = { programada:"Programada", en_progreso:"En Progreso", realizada:"Realizada", cancelada:"Cancelada" };
 const REUN_ESTADO_COLOR  = { programada:G.accent, en_progreso:G.accentOrange, realizada:G.accentGreen, cancelada:G.accentRed };
 
-function ReunionesModule({ reuniones, fb, addToast }) {
-  const [showForm,    setShowForm]    = useState(false);
+function ReunionesPanel({ reuniones, fbReuniones, addToast, showForm, setShowForm, tipo }) {
   const [editReunion, setEditReunion] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
-  const reunionVacia = { titulo:"", fecha:hoy(), hora:"09:00", lugar:"", responsable:RESPONSABLES[0], participantes:"", objetivo:"", acuerdos:"", estado:"programada" };
+  const reunionVacia = { titulo:"", fecha:hoy(), hora:"09:00", duracion:60, lugar:"", responsable:RESPONSABLES[0], participantes:"", objetivo:"", acuerdos:"", estado:"programada" };
   const [form, setForm] = useState(reunionVacia);
 
   async function guardar() {
     if (!form.titulo || !form.fecha) { addToast("Completa título y fecha.", false); return; }
     const { id:_, ...nueva } = form;
-    await fb.agregar(nueva);
+    await fbReuniones.agregar(nueva);
     descargarICS({ titulo:`Reunión: ${nueva.titulo}`, descripcion:nueva.objetivo, fechaInicio:nueva.fecha, fechaTermino:nueva.fecha, responsable:nueva.responsable, lugar:nueva.lugar }, `Reunion_${nueva.titulo}`);
     addToast("Reunión registrada.");
     setForm(reunionVacia); setShowForm(false);
@@ -1017,49 +1077,24 @@ function ReunionesModule({ reuniones, fb, addToast }) {
   async function guardarEdicion() {
     if (!editReunion.titulo || !editReunion.fecha) { addToast("Completa título y fecha.", false); return; }
     const { id, ...cambios } = editReunion;
-    await fb.actualizar(id, cambios);
+    await fbReuniones.actualizar(id, cambios);
     addToast("Reunión actualizada.");
     setEditReunion(null);
   }
 
   function eliminar(id) {
     if (!window.confirm("¿Eliminar esta reunión?")) return;
-    fb.eliminar(id);
+    fbReuniones.eliminar(id);
     addToast("Reunión eliminada.");
-  }
-
-  function FormReunion({ data, setData, onGuardar, onCancelar, tituloBoton }) {
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <Field label="Título *"><input style={css.input} value={data.titulo} onChange={e=>setData(p=>({...p,titulo:e.target.value}))} placeholder="Nombre de la reunión..." /></Field>
-        <div style={css.formGrid}>
-          <Field label="Fecha *"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
-          <Field label="Hora"><input type="time" style={css.input} value={data.hora||"09:00"} onChange={e=>setData(p=>({...p,hora:e.target.value}))} /></Field>
-          <Field label="Responsable / Moderador"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-          <Field label="Estado"><select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>{REUN_ESTADOS.map(e=><option key={e} value={e}>{REUN_ESTADO_LABELS[e]}</option>)}</select></Field>
-        </div>
-        <Field label="Lugar / Link"><input style={css.input} value={data.lugar||""} onChange={e=>setData(p=>({...p,lugar:e.target.value}))} placeholder="Sala, dirección o enlace Zoom/Teams..." /></Field>
-        <Field label="Participantes"><input style={css.input} value={data.participantes||""} onChange={e=>setData(p=>({...p,participantes:e.target.value}))} placeholder="Nombres separados por coma..." /></Field>
-        <Field label="Objetivo / Temario"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.objetivo||""} onChange={e=>setData(p=>({...p,objetivo:e.target.value}))} placeholder="¿Para qué es esta reunión?..." /></Field>
-        <Field label="Acuerdos / Compromisos"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.acuerdos||""} onChange={e=>setData(p=>({...p,acuerdos:e.target.value}))} placeholder="Decisiones tomadas y compromisos asumidos..." /></Field>
-        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-          <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
-          <button style={{ ...css.btn("primary"), background:G.accentPurple, borderColor:G.accentPurple }} onClick={onGuardar}>{tituloBoton}</button>
-        </div>
-      </div>
-    );
   }
 
   const reunFiltradas = filtroEstado==="todos" ? reuniones : reuniones.filter(r=>r.estado===filtroEstado);
   const proximas = [...reuniones].filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").sort((a,b)=>a.fecha.localeCompare(b.fecha));
 
+  if (tipo !== "reunion") return null;
+
   return (
     <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <div style={css.sectionTitle}><span style={{ color:G.accentPurple }}>◉</span> Reuniones</div>
-        <button style={{ ...css.btn("primary"), background:G.accentPurple, borderColor:G.accentPurple }} onClick={()=>setShowForm(true)}>+ Nueva Reunión</button>
-      </div>
-
       <div style={{ background:G.surface, border:`1px solid ${G.accentPurple}33`, borderRadius:6, padding:"10px 14px", marginBottom:16, fontSize:11, color:G.accentPurple }}>
         📅 Al registrar se descarga un <strong>.ics</strong> para Outlook. Usa ✎ para editar y registrar acuerdos y compromisos.
       </div>
@@ -1178,32 +1213,6 @@ function VisitasModule({ visitas, fb, addToast }) {
     await fb.actualizar(id, cambios);
     addToast("Visita actualizada.");
     setEditVisita(null);
-  }
-
-  function FormVisita({ data, setData, onGuardar, onCancelar, tituloBoton }) {
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <div style={css.formGrid}>
-          <Field label="Fecha"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
-          <Field label="Responsable"><select style={css.select} value={data.responsable} onChange={e=>setData(p=>({...p,responsable:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-        </div>
-        <Field label="Lugar *"><input style={css.input} value={data.lugar} onChange={e=>setData(p=>({...p,lugar:e.target.value}))} placeholder="Dirección o nombre del lugar..." /></Field>
-        <Field label="Asistentes"><input style={css.input} value={data.asistentes||""} onChange={e=>setData(p=>({...p,asistentes:e.target.value}))} placeholder="Nombres separados por coma..." /></Field>
-        <Field label="Objetivo *"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.objetivo} onChange={e=>setData(p=>({...p,objetivo:e.target.value}))} placeholder="Objetivo de la visita..." /></Field>
-        <Field label="Resultado / Observaciones"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.resultado||""} onChange={e=>setData(p=>({...p,resultado:e.target.value}))} placeholder="Resultado obtenido..." /></Field>
-        <Field label="Compromisos surgidos"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.compromisos||""} onChange={e=>setData(p=>({...p,compromisos:e.target.value}))} placeholder="Acuerdos, tareas y compromisos que surgieron en la visita..." /></Field>
-        <Field label="Evidencia (URL o referencia)"><input style={css.input} value={data.evidencia||""} onChange={e=>setData(p=>({...p,evidencia:e.target.value}))} placeholder="https://... o nombre del archivo adjunto..." /></Field>
-        <Field label="Estado">
-          <select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>
-            {Object.keys(VEST_COLOR).map(e=><option key={e} value={e}>{VEST_LABELS[e]}</option>)}
-          </select>
-        </Field>
-        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-          <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
-          <button style={css.btn("success")} onClick={onGuardar}>{tituloBoton}</button>
-        </div>
-      </div>
-    );
   }
 
   const visFiltered = filtroEstadoVis==="todos" ? visitas : visitas.filter(v=>(v.estado||"programada")===filtroEstadoVis);
@@ -1498,6 +1507,7 @@ function SOEModule({ soe, fb, addToast }) {
 // ─── CONTINGENCIAS ────────────────────────────────────────────────────────────
 function ContingenciasModule({ contingencias, fb, addToast }) {
   const [showForm, setShowForm] = useState(false);
+  const [editCont, setEditCont] = useState(null);
   const [form, setForm] = useState({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, estado:"activa" });
   const IMP_COLOR  = { bajo:G.accentGreen, medio:G.accentYellow, alto:G.accentRed };
   const CONT_COLOR = { activa:G.accentRed, en_proceso:G.accentOrange, resuelta:G.accentGreen };
@@ -1509,6 +1519,42 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
     addToast("Contingencia registrada.");
     setForm({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, estado:"activa" });
     setShowForm(false);
+  }
+
+  async function guardarEdicion() {
+    if (!editCont.descripcion) { addToast("Ingresa una descripción.", false); return; }
+    const { id, ...cambios } = editCont;
+    await fb.actualizar(id, cambios);
+    addToast("Contingencia actualizada.");
+    setEditCont(null);
+  }
+
+  function eliminar(id) {
+    if (!window.confirm("¿Eliminar esta contingencia?")) return;
+    fb.eliminar(id);
+    addToast("Contingencia eliminada.");
+  }
+
+  function FormCont({ data, setData, onGuardar, onCancelar, tituloBoton }) {
+    return (
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <div style={css.formGrid}>
+          <Field label="Fecha"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
+          <Field label="Reportado por"><select style={css.select} value={data.reportadoPor} onChange={e=>setData(p=>({...p,reportadoPor:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+        </div>
+        <Field label="Descripción *"><textarea style={{ ...css.input, minHeight:80, resize:"vertical" }} value={data.descripcion} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="¿Qué ocurrió?..." /></Field>
+        <div style={css.formGrid}>
+          <Field label="Impacto"><select style={css.select} value={data.impacto} onChange={e=>setData(p=>({...p,impacto:e.target.value}))}>{["bajo","medio","alto"].map(i=><option key={i}>{i}</option>)}</select></Field>
+          <Field label="Tiempo afectado (min)"><input type="number" min={0} style={css.input} value={data.tiempoAfectado} onChange={e=>setData(p=>({...p,tiempoAfectado:+e.target.value}))} /></Field>
+        </div>
+        <Field label="Acción tomada"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.accionTomada} onChange={e=>setData(p=>({...p,accionTomada:e.target.value}))} placeholder="Medidas adoptadas..." /></Field>
+        <Field label="Estado"><select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>{["activa","en_proceso","resuelta"].map(e=><option key={e} value={e}>{e.replace("_"," ")}</option>)}</select></Field>
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+          <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+          <button style={{ ...css.btn("primary"), background:G.accentRed, borderColor:G.accentRed }} onClick={onGuardar}>{tituloBoton}</button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1524,23 +1570,15 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
         <div style={css.modal} onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
           <div style={css.modalBox}>
             <div style={{ fontSize:13, fontWeight:700, marginBottom:20, color:G.accentRed }}>REGISTRAR CONTINGENCIA</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-              <div style={css.formGrid}>
-                <Field label="Fecha"><input type="date" style={css.input} value={form.fecha} onChange={e=>setForm(p=>({...p,fecha:e.target.value}))} /></Field>
-                <Field label="Reportado por"><select style={css.select} value={form.reportadoPor} onChange={e=>setForm(p=>({...p,reportadoPor:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-              </div>
-              <Field label="Descripción *"><textarea style={{ ...css.input, minHeight:80, resize:"vertical" }} value={form.descripcion} onChange={e=>setForm(p=>({...p,descripcion:e.target.value}))} placeholder="¿Qué ocurrió?..." /></Field>
-              <div style={css.formGrid}>
-                <Field label="Impacto"><select style={css.select} value={form.impacto} onChange={e=>setForm(p=>({...p,impacto:e.target.value}))}>{["bajo","medio","alto"].map(i=><option key={i}>{i}</option>)}</select></Field>
-                <Field label="Tiempo afectado (min)"><input type="number" min={0} style={css.input} value={form.tiempoAfectado} onChange={e=>setForm(p=>({...p,tiempoAfectado:+e.target.value}))} /></Field>
-              </div>
-              <Field label="Acción tomada"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={form.accionTomada} onChange={e=>setForm(p=>({...p,accionTomada:e.target.value}))} placeholder="Medidas adoptadas..." /></Field>
-              <Field label="Estado"><select style={css.select} value={form.estado} onChange={e=>setForm(p=>({...p,estado:e.target.value}))}>{["activa","en_proceso","resuelta"].map(e=><option key={e} value={e}>{e.replace("_"," ")}</option>)}</select></Field>
-              <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-                <button style={css.btn("ghost")} onClick={()=>setShowForm(false)}>Cancelar</button>
-                <button style={{ ...css.btn("primary"), background:G.accentRed, borderColor:G.accentRed }} onClick={guardar}>Registrar</button>
-              </div>
-            </div>
+            <FormCont data={form} setData={setForm} onGuardar={guardar} onCancelar={()=>setShowForm(false)} tituloBoton="Registrar" />
+          </div>
+        </div>
+      )}
+      {editCont && (
+        <div style={css.modal} onClick={e=>e.target===e.currentTarget&&setEditCont(null)}>
+          <div style={css.modalBox}>
+            <div style={{ fontSize:13, fontWeight:700, marginBottom:20, color:G.accentRed }}>EDITAR CONTINGENCIA</div>
+            <FormCont data={editCont} setData={setEditCont} onGuardar={guardarEdicion} onCancelar={()=>setEditCont(null)} tituloBoton="Guardar Cambios" />
           </div>
         </div>
       )}
@@ -1549,7 +1587,11 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
           <div key={c.id} style={{ background:G.surface, border:`2px solid ${IMP_COLOR[c.impacto]}44`, borderRadius:8, padding:16 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
               <span style={css.badge(CONT_COLOR[c.estado]||G.textMuted)}>{c.estado.replace("_"," ")}</span>
-              <span style={css.badge(IMP_COLOR[c.impacto])}>impacto {c.impacto}</span>
+              <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                <span style={css.badge(IMP_COLOR[c.impacto])}>impacto {c.impacto}</span>
+                <button title="Editar" onClick={()=>setEditCont({...c})} style={{ background:"none", border:`1px solid ${G.border}`, borderRadius:4, color:G.accentRed, cursor:"pointer", fontSize:12, padding:"2px 7px" }}>✎</button>
+                <button title="Eliminar" onClick={()=>eliminar(c.id)} style={{ background:"none", border:"none", color:G.textDim, cursor:"pointer", fontSize:16, padding:0 }}>×</button>
+              </div>
             </div>
             <div style={{ fontSize:12, marginBottom:8, lineHeight:1.5 }}>{c.descripcion}</div>
             <div style={{ fontSize:11, color:G.textMuted, marginBottom:4 }}>📅 {c.fecha} · 👤 {c.reportadoPor}</div>
@@ -1564,8 +1606,17 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
         <div style={css.sectionTitle}><span style={{ color:G.accentGreen }}>⊞</span> Registro Contingencias</div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Reportado por","Descripción","Impacto","Tiempo","Estado","Acción"].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
-            <tbody>{contingencias.map(c=><tr key={c.id} style={{ borderBottom:`1px solid ${G.borderLight}` }}><td style={{ padding:"8px 12px" }}>{c.fecha}</td><td style={{ padding:"8px 12px" }}>{c.reportadoPor}</td><td style={{ padding:"8px 12px",color:G.textMuted }}>{c.descripcion}</td><td style={{ padding:"8px 12px" }}><span style={css.badge(IMP_COLOR[c.impacto])}>{c.impacto}</span></td><td style={{ padding:"8px 12px" }}>{c.tiempoAfectado} min</td><td style={{ padding:"8px 12px" }}><span style={css.badge(CONT_COLOR[c.estado]||G.textMuted)}>{c.estado.replace("_"," ")}</span></td><td style={{ padding:"8px 12px",color:G.textMuted }}>{c.accionTomada||"—"}</td></tr>)}</tbody>
+            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Reportado por","Descripción","Impacto","Tiempo","Estado","Acción",""].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
+            <tbody>{contingencias.map(c=><tr key={c.id} style={{ borderBottom:`1px solid ${G.borderLight}` }}>
+              <td style={{ padding:"8px 12px" }}>{c.fecha}</td>
+              <td style={{ padding:"8px 12px" }}>{c.reportadoPor}</td>
+              <td style={{ padding:"8px 12px",color:G.textMuted }}>{c.descripcion}</td>
+              <td style={{ padding:"8px 12px" }}><span style={css.badge(IMP_COLOR[c.impacto])}>{c.impacto}</span></td>
+              <td style={{ padding:"8px 12px" }}>{c.tiempoAfectado} min</td>
+              <td style={{ padding:"8px 12px" }}><span style={css.badge(CONT_COLOR[c.estado]||G.textMuted)}>{c.estado.replace("_"," ")}</span></td>
+              <td style={{ padding:"8px 12px",color:G.textMuted }}>{c.accionTomada||"—"}</td>
+              <td style={{ padding:"8px 12px" }}><button title="Eliminar" onClick={()=>eliminar(c.id)} style={{ background:"none", border:"none", color:G.textDim, cursor:"pointer", fontSize:16, padding:0 }}>×</button></td>
+            </tr>)}</tbody>
           </table>
         </div>
       </div>
@@ -1573,8 +1624,147 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
   );
 }
 
+// ─── AUSENCIAS ────────────────────────────────────────────────────────────────
+const AUS_TIPOS   = ["permiso","jornada","licencia_medica","otros"];
+const AUS_LABELS  = { permiso:"Permiso", jornada:"Jornada", licencia_medica:"Licencia Médica", otros:"Otros" };
+const AUS_COLOR   = { permiso:G.accent, jornada:G.accentOrange, licencia_medica:G.accentRed, otros:G.textMuted };
+
+function FormAusencia({ data, setData, onGuardar, onCancelar, tituloBoton }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <div style={css.formGrid}>
+        <Field label="Persona"><select style={css.select} value={data.persona} onChange={e=>setData(p=>({...p,persona:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+        <Field label="Tipo de ausencia"><select style={css.select} value={data.tipo} onChange={e=>setData(p=>({...p,tipo:e.target.value}))}>{AUS_TIPOS.map(t=><option key={t} value={t}>{AUS_LABELS[t]}</option>)}</select></Field>
+        <Field label="Fecha inicio"><input type="date" style={css.input} value={data.fechaInicio} onChange={e=>setData(p=>({...p,fechaInicio:e.target.value}))} /></Field>
+        <Field label="Fecha término"><input type="date" style={css.input} value={data.fechaTermino} onChange={e=>setData(p=>({...p,fechaTermino:e.target.value}))} /></Field>
+      </div>
+      <Field label="Descripción / Motivo"><textarea style={{ ...css.input, minHeight:72, resize:"vertical" }} value={data.descripcion||""} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="Descripción del motivo de la ausencia..." /></Field>
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+        <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+        <button style={{ ...css.btn("primary"), background:"#0891B2", borderColor:"#0891B2" }} onClick={onGuardar}>{tituloBoton}</button>
+      </div>
+    </div>
+  );
+}
+
+function AusenciasModule({ ausencias, fb, addToast }) {
+  const [showForm,   setShowForm]  = useState(false);
+  const [editAus,    setEditAus]   = useState(null);
+  const [filtroTipo, setFiltroTipo]= useState("todos");
+  const ausVacia = { persona:RESPONSABLES[0], tipo:"permiso", fechaInicio:hoy(), fechaTermino:hoy(), descripcion:"" };
+  const [form, setForm] = useState(ausVacia);
+
+  async function guardar() {
+    if (!form.fechaInicio||!form.fechaTermino) { addToast("Completa las fechas.", false); return; }
+    const { id:_, ...nueva } = form;
+    await fb.agregar(nueva);
+    addToast("Ausencia registrada.");
+    setForm(ausVacia); setShowForm(false);
+  }
+
+  async function guardarEdicion() {
+    const { id, ...cambios } = editAus;
+    await fb.actualizar(id, cambios);
+    addToast("Ausencia actualizada.");
+    setEditAus(null);
+  }
+
+  function eliminar(id) {
+    if (!window.confirm("¿Eliminar este registro de ausencia?")) return;
+    fb.eliminar(id); addToast("Ausencia eliminada.");
+  }
+
+  const filtradas = filtroTipo==="todos" ? ausencias : ausencias.filter(a=>a.tipo===filtroTipo);
+  const resumen = RESPONSABLES.map(r => ({
+    nombre:r,
+    dias: ausencias.filter(a=>a.persona===r).reduce((s,a)=>{
+      const d1=new Date(a.fechaInicio+"T00:00:00"), d2=new Date(a.fechaTermino+"T00:00:00");
+      return s + Math.round((d2-d1)/86400000)+1;
+    },0),
+    tipos: [...new Set(ausencias.filter(a=>a.persona===r).map(a=>a.tipo))]
+  })).filter(r=>r.dias>0);
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+        <div style={css.sectionTitle}><span style={{ color:"#0891B2" }}>◑</span> Ausencias del Equipo</div>
+        <button style={{ ...css.btn("primary"), background:"#0891B2", borderColor:"#0891B2" }} onClick={()=>setShowForm(true)}>+ Registrar Ausencia</button>
+      </div>
+
+      {showForm && (
+        <div style={css.modal} onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div style={css.modalBox}>
+            <div style={{ fontSize:13, fontWeight:700, marginBottom:20, color:"#0891B2" }}>REGISTRAR AUSENCIA</div>
+            <FormAusencia data={form} setData={setForm} onGuardar={guardar} onCancelar={()=>setShowForm(false)} tituloBoton="Registrar" />
+          </div>
+        </div>
+      )}
+
+      {editAus && (
+        <div style={css.modal} onClick={e=>e.target===e.currentTarget&&setEditAus(null)}>
+          <div style={css.modalBox}>
+            <div style={{ fontSize:13, fontWeight:700, marginBottom:20, color:"#0891B2" }}>EDITAR AUSENCIA</div>
+            <FormAusencia data={editAus} setData={setEditAus} onGuardar={guardarEdicion} onCancelar={()=>setEditAus(null)} tituloBoton="Guardar Cambios" />
+          </div>
+        </div>
+      )}
+
+      {/* Resumen por persona */}
+      {resumen.length>0 && (
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
+          {resumen.map(r=>(
+            <div key={r.nombre} style={{ background:"#0891B208", border:"1.5px solid #0891B233", borderRadius:8, padding:"10px 16px", minWidth:160 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:G.text }}>{r.nombre.split(" ")[0]}</div>
+              <div style={{ fontSize:22, fontWeight:700, color:"#0891B2", lineHeight:1, marginTop:2 }}>{r.dias}d</div>
+              <div style={{ fontSize:10, color:G.textMuted, marginTop:3 }}>{r.tipos.map(t=>AUS_LABELS[t]).join(", ")}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filtros */}
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:16 }}>
+        <button onClick={()=>setFiltroTipo("todos")} style={{ ...css.navBtn(filtroTipo==="todos"), fontSize:11 }}>Todas ({ausencias.length})</button>
+        {AUS_TIPOS.map(tipo=>{
+          const cnt=ausencias.filter(a=>a.tipo===tipo).length;
+          if(cnt===0) return null;
+          return <button key={tipo} onClick={()=>setFiltroTipo(tipo)} style={{ ...css.navBtn(filtroTipo===tipo), fontSize:11, ...(filtroTipo===tipo?{background:AUS_COLOR[tipo],borderColor:AUS_COLOR[tipo]}:{}) }}>{AUS_LABELS[tipo]} <span style={{ marginLeft:3, background:filtroTipo===tipo?"#ffffff44":AUS_COLOR[tipo]+"22", color:filtroTipo===tipo?"#fff":AUS_COLOR[tipo], borderRadius:99, padding:"0 5px", fontSize:9 }}>{cnt}</span></button>;
+        })}
+      </div>
+
+      {/* Listado */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:16 }}>
+        {filtradas.length===0 && <div style={{ fontSize:12, color:G.textDim, padding:"24px 0" }}>Sin ausencias registradas.</div>}
+        {filtradas.map(a=>{
+          const color = AUS_COLOR[a.tipo]||G.textMuted;
+          const d1=new Date(a.fechaInicio+"T00:00:00"), d2=new Date(a.fechaTermino+"T00:00:00");
+          const dias = Math.round((d2-d1)/86400000)+1;
+          return (
+            <div key={a.id} style={{ background:G.surface, border:`2px solid ${color}33`, borderRadius:8, padding:16 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+                <div>
+                  <div style={{ fontSize:14, fontWeight:700, color:G.text }}>{a.persona}</div>
+                  <span style={css.badge(color)}>{AUS_LABELS[a.tipo]||a.tipo}</span>
+                </div>
+                <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                  <button title="Editar" onClick={()=>setEditAus({...a})} style={{ background:"none", border:`1px solid ${G.border}`, borderRadius:4, color, cursor:"pointer", fontSize:12, padding:"2px 7px" }}>✎</button>
+                  <button title="Eliminar" onClick={()=>eliminar(a.id)} style={{ background:"none", border:"none", color:G.textDim, cursor:"pointer", fontSize:16, padding:0 }}>×</button>
+                </div>
+              </div>
+              <div style={{ fontSize:11, color:G.textMuted, display:"flex", flexDirection:"column", gap:3 }}>
+                <div>📅 {a.fechaInicio}{a.fechaTermino!==a.fechaInicio?` → ${a.fechaTermino}`:""} <strong style={{ color }}>({dias} día{dias!==1?"s":""})</strong></div>
+                {a.descripcion&&<div style={{ marginTop:6, fontSize:11, color:G.text, background:G.bg, borderRadius:6, padding:"6px 10px" }}>{a.descripcion}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
-function Dashboard({ tareas, visitas, soe, contingencias }) {
+function Dashboard({ tareas, visitas, soe, contingencias, ausencias }) {
   const total       = tareas.length;
   const completadas = tareas.filter(t=>t.estado==="completado").length;
   const enProgreso  = tareas.filter(t=>t.estado==="en_progreso").length;
@@ -1585,8 +1775,15 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
   const altaP       = tareas.filter(t=>t.prioridad==="alta"&&t.estado!=="completado").length;
   const soePend     = soe.filter(s=>s.estado==="pendiente").length;
   const contAct     = contingencias.filter(c=>c.estado==="activa").length;
+  const ausActivas  = ausencias.filter(a=>{ const h=hoy(); return a.fechaInicio<=h&&a.fechaTermino>=h; });
   const urgentes    = tareas.filter(t=>t.estado!=="completado"&&diasHasta(t.fechaTermino)<=3).sort((a,b)=>diasHasta(a.fechaTermino)-diasHasta(b.fechaTermino));
   const estadoData  = [{ label:"Completadas",c:G.accentGreen,v:completadas },{ label:"En Progreso",c:G.accent,v:enProgreso },{ label:"En Revisión",c:G.accentOrange,v:revision },{ label:"Pendientes",c:G.textDim,v:pendientes }];
+
+  // Impacto de contingencias
+  const totalMinAfectados = contingencias.filter(c=>c.estado!=="resuelta").reduce((s,c)=>s+(c.tiempoAfectado||0),0);
+  const contAlto   = contingencias.filter(c=>c.impacto==="alto"&&c.estado!=="resuelta").length;
+  const contMedio  = contingencias.filter(c=>c.impacto==="medio"&&c.estado!=="resuelta").length;
+
   const P  = { background:"#fff", border:`1px solid ${G.border}`, borderRadius:12, padding:20, boxShadow:"0 1px 4px rgba(0,0,0,0.05)" };
   const PT = { fontSize:11, fontWeight:600, color:G.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:16 };
 
@@ -1598,8 +1795,45 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
         {porVencer>0&&<AlertChip val={porVencer} label="Vence en ≤3 días" color={G.accentOrange} bg={G.accentOrangeLight} />}
         {altaP>0&&<AlertChip val={altaP} label="Prioridad Alta" color={G.accentRed} bg={G.accentRedLight} />}
         {soePend>0&&<AlertChip val={soePend} label="SOE pendiente(s)" color={G.accentYellow} bg="#FDF3E3" />}
-        {contAct>0&&<AlertChip val={contAct} label="Contingencia(s)" color={G.accentRed} bg={G.accentRedLight} />}
+        {contAct>0&&<AlertChip val={contAct} label="Contingencia(s) activa(s)" color={G.accentRed} bg={G.accentRedLight} />}
+        {ausActivas.length>0&&<AlertChip val={ausActivas.length} label="Ausencia(s) hoy" color="#0891B2" bg="#E0F2FE" />}
       </div>
+
+      {/* Panel impacto contingencias */}
+      {contingencias.filter(c=>c.estado!=="resuelta").length>0 && (
+        <div style={{ ...P, border:`2px solid ${G.accentRed}44`, background:G.accentRedLight }}>
+          <div style={{ ...PT, color:G.accentRed }}>⚠ Impacto de Contingencias en Actividades Programadas</div>
+          <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:16 }}>
+            <div style={{ flex:1, minWidth:140, textAlign:"center", background:"#fff", borderRadius:8, padding:"12px 0" }}>
+              <div style={{ fontSize:28, fontWeight:700, color:G.accentRed, lineHeight:1 }}>{totalMinAfectados}</div>
+              <div style={{ fontSize:11, color:G.accentRed, marginTop:3 }}>min. afectados (sin resolver)</div>
+            </div>
+            <div style={{ flex:1, minWidth:140, textAlign:"center", background:"#fff", borderRadius:8, padding:"12px 0" }}>
+              <div style={{ fontSize:28, fontWeight:700, color:G.accentRed, lineHeight:1 }}>{contAlto}</div>
+              <div style={{ fontSize:11, color:G.accentRed, marginTop:3 }}>impacto ALTO activas</div>
+            </div>
+            <div style={{ flex:1, minWidth:140, textAlign:"center", background:"#fff", borderRadius:8, padding:"12px 0" }}>
+              <div style={{ fontSize:28, fontWeight:700, color:G.accentOrange, lineHeight:1 }}>{contMedio}</div>
+              <div style={{ fontSize:11, color:G.accentOrange, marginTop:3 }}>impacto MEDIO activas</div>
+            </div>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {contingencias.filter(c=>c.estado!=="resuelta").sort((a,b)=>["alto","medio","bajo"].indexOf(a.impacto)-["alto","medio","bajo"].indexOf(b.impacto)).slice(0,4).map(c=>{
+              const IMP_C = { bajo:G.accentGreen, medio:G.accentOrange, alto:G.accentRed };
+              return (
+                <div key={c.id} style={{ background:"#fff", borderRadius:6, padding:"8px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:10 }}>
+                  <div style={{ flex:1, fontSize:12, color:G.text }}>{c.descripcion}</div>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
+                    {c.tiempoAfectado>0&&<span style={{ fontSize:11, color:G.accentYellow }}>⏱{c.tiempoAfectado}min</span>}
+                    <span style={css.badge(IMP_C[c.impacto])}>{c.impacto}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {contingencias.filter(c=>c.estado!=="resuelta").length>4&&<div style={{ fontSize:11, color:G.accentRed, textAlign:"center" }}>+{contingencias.filter(c=>c.estado!=="resuelta").length-4} más — ver módulo Contingencias</div>}
+          </div>
+        </div>
+      )}
 
       {/* Donut | Avance | Urgentes */}
       <div style={{ display:"grid", gridTemplateColumns:"auto 1fr 1fr", gap:16 }}>
@@ -1719,14 +1953,14 @@ function Dashboard({ tareas, visitas, soe, contingencias }) {
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
 const MODULOS = [
-  { id:"dashboard",     label:"Resumen"          },
-  { id:"kanban",        label:"Tareas"            },
-  { id:"reuniones",     label:"Reuniones"         },
-  { id:"visitas",       label:"Visitas"           },
-  { id:"soe",           label:"Trab. Extraord."   },
-  { id:"contingencias", label:"Contingencias"     },
-  { id:"informe",       label:"Informe"           },
-  { id:"historial",     label:"Historial Carga"   },
+  { id:"dashboard",     label:"Resumen"           },
+  { id:"tareas",        label:"Tareas y Reuniones" },
+  { id:"visitas",       label:"Visitas"            },
+  { id:"soe",           label:"Trab. Extraord."    },
+  { id:"contingencias", label:"Contingencias"      },
+  { id:"ausencias",     label:"Ausencias"          },
+  { id:"informe",       label:"Informe"            },
+  { id:"historial",     label:"Historial Carga"    },
 ];
 
 export default function App() {
@@ -1736,10 +1970,11 @@ export default function App() {
   const [visitas,       cargandoVis,   errVisitas]    = useColeccion("visitas");
   const [soe,           cargandoSoe,   errSoe]        = useColeccion("soe");
   const [contingencias, cargandoCont,  errCont]       = useColeccion("contingencias");
+  const [ausencias,     cargandoAus,   errAus]        = useColeccion("ausencias");
 
   const [toast, setToast] = useState(null);
   const addToast = useCallback((msg, ok=true) => setToast({ msg, ok }), []);
-  const cargando = cargandoTareas||cargandoReun||cargandoVis||cargandoSoe||cargandoCont;
+  const cargando = cargandoTareas||cargandoReun||cargandoVis||cargandoSoe||cargandoCont||cargandoAus;
 
   // Operaciones Firebase con error handling para cada módulo
   const fbTareas    = useMemo(() => mkFb("tareas",        addToast), [addToast]);
@@ -1747,6 +1982,7 @@ export default function App() {
   const fbVisitas   = useMemo(() => mkFb("visitas",       addToast), [addToast]);
   const fbSoe       = useMemo(() => mkFb("soe",           addToast), [addToast]);
   const fbCont      = useMemo(() => mkFb("contingencias", addToast), [addToast]);
+  const fbAus       = useMemo(() => mkFb("ausencias",     addToast), [addToast]);
 
   // Alerta diaria (una vez por sesión)
   const [mostrarAlerta, setMostrarAlerta] = useState(false);
@@ -1772,7 +2008,8 @@ export default function App() {
   const soePendientes  = soe.filter(s=>s.estado==="pendiente").length;
   const contActivas    = contingencias.filter(c=>c.estado==="activa").length;
   const tareasUrgentes = tareas.filter(t=>t.estado!=="completado"&&diasHasta(t.fechaTermino)<=3).length;
-  const errores        = [errTareas, errReuniones, errVisitas, errSoe, errCont];
+  const ausHoy         = ausencias.filter(a=>{ const h=hoy(); return a.fechaInicio<=h&&a.fechaTermino>=h; }).length;
+  const errores        = [errTareas, errReuniones, errVisitas, errSoe, errCont, errAus];
 
   if (cargando) return (
     <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
@@ -1796,10 +2033,11 @@ export default function App() {
           {MODULOS.map(m => (
             <button key={m.id} style={css.navBtn(modulo===m.id)} onClick={()=>setModulo(m.id)}>
               {m.label}
-              {m.id==="kanban"        && tareasUrgentes>0 && <span style={{ marginLeft:5, background:G.accentOrange, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{tareasUrgentes}</span>}
-              {m.id==="reuniones"     && reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length>0 && <span style={{ marginLeft:5, background:G.accentPurple, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length}</span>}
+              {m.id==="tareas"        && tareasUrgentes>0 && <span style={{ marginLeft:5, background:G.accentOrange, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{tareasUrgentes}</span>}
+              {m.id==="tareas"        && reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length>0 && <span style={{ marginLeft:5, background:G.accentPurple, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length}</span>}
               {m.id==="soe"           && soePendientes>0  && <span style={{ marginLeft:5, background:G.accentYellow, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{soePendientes}</span>}
               {m.id==="contingencias" && contActivas>0    && <span style={{ marginLeft:5, background:G.accentRed, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{contActivas}</span>}
+              {m.id==="ausencias"     && ausHoy>0         && <span style={{ marginLeft:5, background:"#0891B2", color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{ausHoy}</span>}
             </button>
           ))}
         </nav>
@@ -1810,12 +2048,12 @@ export default function App() {
       <FbErrorBanner errores={errores} />
 
       <main style={css.main}>
-        {modulo==="dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
-        {modulo==="kanban"        && <KanbanModule tareas={tareas} fb={fbTareas} addToast={addToast} />}
-        {modulo==="reuniones"     && <ReunionesModule reuniones={reuniones} fb={fbReuniones} addToast={addToast} />}
+        {modulo==="dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} ausencias={ausencias} />}
+        {modulo==="tareas"        && <TareasReunionesModule tareas={tareas} reuniones={reuniones} fbTareas={fbTareas} fbReuniones={fbReuniones} addToast={addToast} />}
         {modulo==="visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} addToast={addToast} />}
         {modulo==="soe"           && <SOEModule soe={soe} fb={fbSoe} addToast={addToast} />}
         {modulo==="contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} addToast={addToast} />}
+        {modulo==="ausencias"     && <AusenciasModule ausencias={ausencias} fb={fbAus} addToast={addToast} />}
         {modulo==="informe"       && <InformeModule tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
         {modulo==="historial"     && <HistorialCargaModule tareas={tareas} />}
       </main>
@@ -1824,4 +2062,3 @@ export default function App() {
     </div>
   );
 }
-
