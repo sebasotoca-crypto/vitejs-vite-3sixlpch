@@ -520,7 +520,7 @@ ${tareasVenc.length===0?"  (ninguna)":tareasVenc.sort((a,b)=>diasHasta(a.fechaTe
 ════════════════════════════════════════
 VISITAS REALIZADAS
 ════════════════════════════════════════
-${visitasReal.length===0?"  (ninguna)":visitasReal.map(v=>`• ${v.fecha} | ${v.lugar} — ${v.responsable}\n  Objetivo: ${v.objetivo}${v.resultado?"\n  Resultado: "+v.resultado:""}${v.asistentes?"\n  Asistentes: "+v.asistentes:""}${v.compromisos?"\n  Compromisos: "+v.compromisos:""}`).join("\n\n")}
+${visitasReal.length===0?"  (ninguna)":visitasReal.map(v=>`• ${v.fecha} | ${v.lugar} — ${v.responsable}\n  Objetivo: ${v.objetivo}${v.resultado?"\n  Resultado: "+v.resultado:""}${v.compromisos?"\n  Compromisos: "+v.compromisos:""}`).join("\n\n")}
 
 ════════════════════════════════════════
 SOLICITUDES DE TRABAJO EXTRAORDINARIO
@@ -733,6 +733,7 @@ function FormTarea({ titulo, data, setData, onGuardar, onCancelar, guardando }) 
         </select>
       </Field>
       <Field label="Descripción"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.descripcion||""} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="Detalles adicionales..." /></Field>
+
       <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:8 }}>
         <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
         <button style={css.btn("primary")} onClick={onGuardar} disabled={guardando}>{guardando?"Guardando...":titulo}</button>
@@ -804,7 +805,7 @@ function TareasReunionesModule({ tareas, reuniones, fbTareas, fbReuniones, addTo
   const [busqueda,    setBusqueda]    = useState("");
   const [paginaCol,   setPaginaCol]   = useState({}); // { estado: visiblesCount }
 
-  const tareaVacia = { titulo:"", responsable:RESPONSABLES[0], fechaInicio:hoy(), fechaTermino:"", estado:"pendiente", prioridad:"media", descripcion:"", horasEstimadas:1 };
+  const tareaVacia = { titulo:"", responsable:RESPONSABLES[0], fechaInicio:hoy(), fechaTermino:"", estado:"pendiente", prioridad:"media", descripcion:"" };
   const [form, setForm] = useState(tareaVacia);
 
   // Filtros acumulados: responsable + búsqueda de texto
@@ -1195,7 +1196,7 @@ function VisitasModule({ visitas, fb, addToast }) {
   const [editVisita,setEditVisita]= useState(null);
   const [filtroEstadoVis, setFiltroEstadoVis] = useState("todos");
 
-  const visitaVacia = { fecha:hoy(), lugar:"", responsable:RESPONSABLES[0], objetivo:"", resultado:"", estado:"programada", asistentes:"", compromisos:"", evidencia:"" };
+  const visitaVacia = { fecha:hoy(), lugar:"", responsable:RESPONSABLES[0], objetivo:"", resultado:"", estado:"programada", compromisos:"" };
   const [form, setForm] = useState(visitaVacia);
 
   async function guardar() {
@@ -1224,7 +1225,7 @@ function VisitasModule({ visitas, fb, addToast }) {
         <button style={css.btn("primary")} onClick={()=>setShowForm(true)}>+ Nueva Visita</button>
       </div>
       <div style={{ background:G.surface, border:`1px solid ${G.accentOrange}33`, borderRadius:6, padding:"10px 14px", marginBottom:20, fontSize:11, color:G.accentOrange }}>
-        📅 Al registrar se descarga un <strong>.ics</strong> para Outlook. Usa ✎ para editar y registrar asistentes, resultados y compromisos de seguimiento.
+        📅 Al registrar se descarga un <strong>.ics</strong> para Outlook. Usa ✎ para editar y registrar resultados y compromisos de seguimiento.
       </div>
 
       {showForm && (
@@ -1240,7 +1241,7 @@ function VisitasModule({ visitas, fb, addToast }) {
         <div style={css.modal} onClick={e=>e.target===e.currentTarget&&setEditVisita(null)}>
           <div style={css.modalBox}>
             <div style={{ fontSize:13, fontWeight:700, marginBottom:4, color:G.accentOrange }}>EDITAR VISITA</div>
-            <div style={{ fontSize:11, color:G.textDim, marginBottom:16 }}>Actualiza asistentes, resultado, compromisos y evidencia.</div>
+            <div style={{ fontSize:11, color:G.textDim, marginBottom:16 }}>Actualiza resultado, compromisos y estado.</div>
             <FormVisita data={editVisita} setData={setEditVisita} onGuardar={guardarEdicion} onCancelar={()=>setEditVisita(null)} tituloBoton="Guardar Cambios" />
           </div>
         </div>
@@ -1271,19 +1272,12 @@ function VisitasModule({ visitas, fb, addToast }) {
                 </div>
               </div>
               <div style={{ fontSize:11, color:G.textMuted, marginBottom:6 }}>📅 {v.fecha} · 👤 {v.responsable}</div>
-              {v.asistentes && <div style={{ fontSize:11, color:G.textMuted, marginBottom:4 }}>👥 <strong>Asistentes:</strong> {v.asistentes}</div>}
-              <div style={{ fontSize:11, marginBottom:v.resultado||v.compromisos||v.evidencia?8:0 }}><span style={{ color:G.textMuted }}>Objetivo: </span>{v.objetivo}</div>
+              <div style={{ fontSize:11, marginBottom:v.resultado||v.compromisos?8:0 }}><span style={{ color:G.textMuted }}>Objetivo: </span>{v.objetivo}</div>
               {v.resultado && <div style={{ fontSize:11, color:G.accentGreen, marginBottom:6 }}><span style={{ color:G.textMuted }}>Resultado: </span>{v.resultado}</div>}
               {v.compromisos && (
                 <div style={{ background:G.accentOrangeLight, border:`1px solid ${G.accentOrange}33`, borderRadius:6, padding:"8px 10px", marginBottom:6 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:G.accentOrange, marginBottom:3 }}>📌 COMPROMISOS DE SEGUIMIENTO</div>
                   <div style={{ fontSize:11, color:G.text, whiteSpace:"pre-line" }}>{v.compromisos}</div>
-                </div>
-              )}
-              {v.evidencia && (
-                <div style={{ fontSize:11, marginBottom:8 }}>
-                  <span style={{ color:G.textMuted }}>🔗 Evidencia: </span>
-                  {v.evidencia.startsWith("http") ? <a href={v.evidencia} target="_blank" rel="noopener noreferrer" style={{ color:G.accent }}>{v.evidencia}</a> : <span>{v.evidencia}</span>}
                 </div>
               )}
               <div style={{ borderTop:`1px solid ${G.borderLight}`, paddingTop:10, marginTop:8 }}>
@@ -1314,7 +1308,7 @@ function VisitasModule({ visitas, fb, addToast }) {
         <div style={css.sectionTitle}><span style={{ color:G.accentGreen }}>⊞</span> Registro Visitas</div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Lugar","Responsable","Asistentes","Objetivo","Compromisos","Evidencia","Estado"].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ borderBottom:`1px solid ${G.border}` }}>{["Fecha","Lugar","Responsable","Objetivo","Compromisos","Estado"].map(h=><th key={h} style={{ padding:"8px 12px",textAlign:"left",color:G.textMuted,fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em" }}>{h}</th>)}</tr></thead>
             <tbody>{visitas.map(v=>{
               const estadoActual=v.estado||"pendiente";
               return (
@@ -1322,10 +1316,8 @@ function VisitasModule({ visitas, fb, addToast }) {
                   <td style={{ padding:"8px 12px" }}>{v.fecha}</td>
                   <td style={{ padding:"8px 12px",fontWeight:700 }}>{v.lugar}</td>
                   <td style={{ padding:"8px 12px",color:G.textMuted }}>{v.responsable}</td>
-                  <td style={{ padding:"8px 12px",color:G.textMuted }}>{v.asistentes||"—"}</td>
                   <td style={{ padding:"8px 12px",color:G.textMuted,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{v.objetivo}</td>
                   <td style={{ padding:"8px 12px",color:G.textMuted,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{v.compromisos||"—"}</td>
-                  <td style={{ padding:"8px 12px",color:G.textMuted }}>{v.evidencia||"—"}</td>
                   <td style={{ padding:"8px 12px" }}>
                     <select style={{ ...css.select, padding:"3px 6px", width:"auto", fontSize:10 }} value={estadoActual} onChange={e=>fb.actualizar(v.id,{estado:e.target.value})}>
                       {Object.entries(VEST_COLOR).map(([e])=><option key={e} value={e}>{VEST_LABELS[e]}</option>)}
@@ -1504,11 +1496,35 @@ function SOEModule({ soe, fb, addToast }) {
   );
 }
 
+// ─── FORM CONT (top-level — fuera de ContingenciasModule para evitar pérdida de foco) ──
+function FormCont({ data, setData, onGuardar, onCancelar, tituloBoton }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <div style={css.formGrid}>
+        <Field label="Fecha"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
+        <Field label="Reportado por"><select style={css.select} value={data.reportadoPor} onChange={e=>setData(p=>({...p,reportadoPor:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+      </div>
+      <Field label="Descripción *"><textarea style={{ ...css.input, minHeight:80, resize:"vertical" }} value={data.descripcion} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="¿Qué ocurrió?..." /></Field>
+      <div style={css.formGrid}>
+        <Field label="Impacto"><select style={css.select} value={data.impacto} onChange={e=>setData(p=>({...p,impacto:e.target.value}))}>{["bajo","medio","alto"].map(i=><option key={i}>{i}</option>)}</select></Field>
+        <Field label="Tiempo afectado (min)"><input type="number" min={0} style={css.input} value={data.tiempoAfectado} onChange={e=>setData(p=>({...p,tiempoAfectado:+e.target.value}))} /></Field>
+      </div>
+      <Field label="Acción tomada"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.accionTomada} onChange={e=>setData(p=>({...p,accionTomada:e.target.value}))} placeholder="Medidas adoptadas..." /></Field>
+      <Field label="Actividades programadas afectadas"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.tareasAfectadas||""} onChange={e=>setData(p=>({...p,tareasAfectadas:e.target.value}))} placeholder="Describe qué actividades o tareas programadas se vieron afectadas..." /></Field>
+      <Field label="Estado"><select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>{["activa","en_proceso","resuelta"].map(e=><option key={e} value={e}>{e.replace("_"," ")}</option>)}</select></Field>
+      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+        <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
+        <button style={{ ...css.btn("primary"), background:G.accentRed, borderColor:G.accentRed }} onClick={onGuardar}>{tituloBoton}</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── CONTINGENCIAS ────────────────────────────────────────────────────────────
 function ContingenciasModule({ contingencias, fb, addToast }) {
   const [showForm, setShowForm] = useState(false);
   const [editCont, setEditCont] = useState(null);
-  const [form, setForm] = useState({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, estado:"activa" });
+  const [form, setForm] = useState({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, tareasAfectadas:"", estado:"activa" });
   const IMP_COLOR  = { bajo:G.accentGreen, medio:G.accentYellow, alto:G.accentRed };
   const CONT_COLOR = { activa:G.accentRed, en_proceso:G.accentOrange, resuelta:G.accentGreen };
 
@@ -1517,7 +1533,7 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
     const { id:_, ...fdata } = form;
     await fb.agregar(fdata);
     addToast("Contingencia registrada.");
-    setForm({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, estado:"activa" });
+    setForm({ fecha:hoy(), reportadoPor:RESPONSABLES[0], descripcion:"", impacto:"medio", accionTomada:"", tiempoAfectado:0, tareasAfectadas:"", estado:"activa" });
     setShowForm(false);
   }
 
@@ -1533,28 +1549,6 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
     if (!window.confirm("¿Eliminar esta contingencia?")) return;
     fb.eliminar(id);
     addToast("Contingencia eliminada.");
-  }
-
-  function FormCont({ data, setData, onGuardar, onCancelar, tituloBoton }) {
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <div style={css.formGrid}>
-          <Field label="Fecha"><input type="date" style={css.input} value={data.fecha} onChange={e=>setData(p=>({...p,fecha:e.target.value}))} /></Field>
-          <Field label="Reportado por"><select style={css.select} value={data.reportadoPor} onChange={e=>setData(p=>({...p,reportadoPor:e.target.value}))}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-        </div>
-        <Field label="Descripción *"><textarea style={{ ...css.input, minHeight:80, resize:"vertical" }} value={data.descripcion} onChange={e=>setData(p=>({...p,descripcion:e.target.value}))} placeholder="¿Qué ocurrió?..." /></Field>
-        <div style={css.formGrid}>
-          <Field label="Impacto"><select style={css.select} value={data.impacto} onChange={e=>setData(p=>({...p,impacto:e.target.value}))}>{["bajo","medio","alto"].map(i=><option key={i}>{i}</option>)}</select></Field>
-          <Field label="Tiempo afectado (min)"><input type="number" min={0} style={css.input} value={data.tiempoAfectado} onChange={e=>setData(p=>({...p,tiempoAfectado:+e.target.value}))} /></Field>
-        </div>
-        <Field label="Acción tomada"><textarea style={{ ...css.input, minHeight:60, resize:"vertical" }} value={data.accionTomada} onChange={e=>setData(p=>({...p,accionTomada:e.target.value}))} placeholder="Medidas adoptadas..." /></Field>
-        <Field label="Estado"><select style={css.select} value={data.estado} onChange={e=>setData(p=>({...p,estado:e.target.value}))}>{["activa","en_proceso","resuelta"].map(e=><option key={e} value={e}>{e.replace("_"," ")}</option>)}</select></Field>
-        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-          <button style={css.btn("ghost")} onClick={onCancelar}>Cancelar</button>
-          <button style={{ ...css.btn("primary"), background:G.accentRed, borderColor:G.accentRed }} onClick={onGuardar}>{tituloBoton}</button>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -1596,6 +1590,7 @@ function ContingenciasModule({ contingencias, fb, addToast }) {
             <div style={{ fontSize:12, marginBottom:8, lineHeight:1.5 }}>{c.descripcion}</div>
             <div style={{ fontSize:11, color:G.textMuted, marginBottom:4 }}>📅 {c.fecha} · 👤 {c.reportadoPor}</div>
             {c.tiempoAfectado>0&&<div style={{ fontSize:11, color:G.accentYellow }}>⏱ {c.tiempoAfectado} min afectados</div>}
+            {c.tareasAfectadas&&<div style={{ fontSize:11, color:G.accentOrange, marginTop:4, background:G.accentOrangeLight, borderRadius:6, padding:"6px 10px" }}>📋 <strong>Actividades afectadas:</strong> {c.tareasAfectadas}</div>}
             {c.accionTomada&&<div style={{ fontSize:11, color:G.accentGreen, marginTop:6 }}>✓ {c.accionTomada}</div>}
             {c.estado!=="resuelta"&&<button onClick={()=>fb.actualizar(c.id,{estado:"resuelta"})} style={{ marginTop:10, ...css.btn("success"), padding:"4px 10px", fontSize:10 }}>Marcar resuelta</button>}
           </div>
@@ -1821,12 +1816,15 @@ function Dashboard({ tareas, visitas, soe, contingencias, ausencias }) {
             {contingencias.filter(c=>c.estado!=="resuelta").sort((a,b)=>["alto","medio","bajo"].indexOf(a.impacto)-["alto","medio","bajo"].indexOf(b.impacto)).slice(0,4).map(c=>{
               const IMP_C = { bajo:G.accentGreen, medio:G.accentOrange, alto:G.accentRed };
               return (
-                <div key={c.id} style={{ background:"#fff", borderRadius:6, padding:"8px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:10 }}>
-                  <div style={{ flex:1, fontSize:12, color:G.text }}>{c.descripcion}</div>
-                  <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
-                    {c.tiempoAfectado>0&&<span style={{ fontSize:11, color:G.accentYellow }}>⏱{c.tiempoAfectado}min</span>}
-                    <span style={css.badge(IMP_C[c.impacto])}>{c.impacto}</span>
+                <div key={c.id} style={{ background:"#fff", borderRadius:6, padding:"10px 12px", display:"flex", flexDirection:"column", gap:4 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10 }}>
+                    <div style={{ flex:1, fontSize:12, color:G.text, fontWeight:600 }}>{c.descripcion}</div>
+                    <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
+                      {c.tiempoAfectado>0&&<span style={{ fontSize:11, color:G.accentYellow }}>⏱{c.tiempoAfectado}min</span>}
+                      <span style={css.badge(IMP_C[c.impacto])}>{c.impacto}</span>
+                    </div>
                   </div>
+                  {c.tareasAfectadas&&<div style={{ fontSize:11, color:G.accentOrange }}>📋 Afecta: {c.tareasAfectadas}</div>}
                 </div>
               );
             })}
@@ -1916,7 +1914,7 @@ function Dashboard({ tareas, visitas, soe, contingencias, ausencias }) {
                 <div key={v.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", background:esHoy?G.accentLight:G.bg, borderRadius:8, border:`1px solid ${esHoy?G.accent:G.border}` }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:600, fontSize:13, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{v.lugar}</div>
-                    <div style={{ fontSize:11, color:G.textMuted, marginTop:2 }}>{v.responsable}{v.asistentes&&` · ${v.asistentes.split(",").length} asistente${v.asistentes.split(",").length!==1?"s":""}`}</div>
+                    <div style={{ fontSize:11, color:G.textMuted, marginTop:2 }}>{v.responsable}</div>
                   </div>
                   <div style={{ textAlign:"right", flexShrink:0, marginLeft:12 }}>
                     <div style={{ fontSize:12, fontWeight:600, color:G.accent }}>{v.fecha}</div>
@@ -1936,7 +1934,7 @@ function Dashboard({ tareas, visitas, soe, contingencias, ausencias }) {
           <span style={{ fontSize:12, color:G.textMuted, fontWeight:600 }}>Exportar datos:</span>
           {[
             { label:"Tareas",        data:tareas,        fields:["titulo","responsable","fechaInicio","fechaTermino","estado","prioridad","horasEstimadas","descripcion"] },
-            { label:"Visitas",       data:visitas,       fields:["fecha","lugar","responsable","asistentes","objetivo","resultado","compromisos","evidencia","estado"] },
+            { label:"Visitas",       data:visitas,       fields:["fecha","lugar","responsable","objetivo","resultado","compromisos","estado"] },
             { label:"SOE",           data:soe,           fields:["fecha","solicitante","descripcion","horasExtra","estado","aprobadaPor","timestampAprobacion","observacion"] },
             { label:"Contingencias", data:contingencias, fields:["fecha","reportadoPor","descripcion","impacto","tiempoAfectado","estado","accionTomada"] },
           ].map(({ label, data, fields }) => (
