@@ -27,11 +27,20 @@ const db    = getFirestore(fbApp);
 
 // ─── Hook con manejo de errores de Firebase ───────────────────────────────────
 // Si la conexión cae, errorFb contiene el mensaje de error en lugar de congelar.
+// ─── Hook con manejo de errores de Firebase ───────────────────────────────────
 function useColeccion(nombre) {
   const [datos,    setDatos]    = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorFb,  setErrorFb]  = useState(null);
   useEffect(() => {
+    // SI NO HAY NOMBRE (EJ. ESTAMOS EN LA PANTALLA INICIAL), NO BUSCAMOS NADA
+    if (!nombre) {
+      setDatos([]);
+      setCargando(false);
+      return;
+    }
+    
+    setCargando(true);
     setErrorFb(null);
     const unsub = onSnapshot(
       collection(db, nombre),
@@ -50,7 +59,6 @@ function useColeccion(nombre) {
   }, [nombre]);
   return [datos, cargando, errorFb];
 }
-
 // ─── Primitivas de escritura ──────────────────────────────────────────────────
 // Firebase genera su propio id en addDoc — se descarta cualquier id local.
 async function fbAgregar(col, item)          { const { id: _, ...d } = item; return addDoc(collection(db, col), d); }
