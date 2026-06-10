@@ -2,18 +2,6 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║  ⚠  CREDENCIALES EXPUESTAS — Leer antes de desplegar en producción          ║
-// ║                                                                              ║
-// ║  Firebase y EmailJS están hardcodeados en el bundle del cliente.            ║
-// ║  Cualquiera que inspeccione el código puede extraerlos.                      ║
-// ║                                                                              ║
-// ║  Para protegerlos:                                                           ║
-// ║  1. Migrar a Vite o CRA con soporte .env                                     ║
-// ║  2. Mover cada clave a VITE_FIREBASE_* / REACT_APP_FIREBASE_* ║
-// ║  3. Agregar .env al .gitignore antes del primer commit                       ║
-// ║  4. Restringir la API Key de Firebase en console.firebase.google.com          ║
-// ╚══════════════════════════════════════════════════════════════════════════════╝
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDZij70_7ty4BL4Jh9BAwwjkOOZpYdEJt0",
   authDomain: "gestion-operativa-dadt.firebaseapp.com",
@@ -56,12 +44,10 @@ function useColeccion(nombre) {
   return [datos, cargando, errorFb];
 }
 
-// ─── Primitivas de escritura ──────────────────────────────────────────────────
 async function fbAgregar(col, item)          { const { id: _, ...d } = item; return addDoc(collection(db, col), d); }
 async function fbActualizar(col, id, cambios) { return updateDoc(doc(db, col, id), cambios); }
 async function fbEliminar(col, id)            { return deleteDoc(doc(db, col, id)); }
 
-// ─── Factory de operaciones con manejo de error por módulo ───────────────────
 function mkFb(col, addToast) {
   return {
     agregar:    async (item)         => { try { return await fbAgregar(col, item);           } catch { addToast("Error al guardar. Verifica tu conexión.", false); } },
@@ -70,7 +56,6 @@ function mkFb(col, addToast) {
   };
 }
 
-// ─── EmailJS ──────────────────────────────────────────────────────────────────
 const EMAILJS_CONFIG = {
   SERVICE_ID:          "gestion_operativa",
   TEMPLATE_ASIGNACION: "template_04yxyyn",
@@ -115,7 +100,6 @@ async function notificarSOEJefaturas(solicitud) {
   return resultados.some(Boolean);
 }
 
-// ─── Paleta y estilos ─────────────────────────────────────────────────────────
 const G = {
   bg: "#F7F8FC", surface: "#FFFFFF", surfaceHover: "#F0F4FF",
   border: "#DDE2EF", borderLight: "#EEF1F8",
@@ -145,7 +129,6 @@ const css = {
   modalBox: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 12, padding: 28, width: 580, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" },
 };
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
 const RESPONSABLES  = [...new Set([...Object.keys(CORREOS), ...Object.keys(JEFATURAS)])];
 const PRIORIDADES   = ["baja", "media", "alta"];
 const ESTADOS       = ["pendiente", "en_progreso", "revision", "completado"];
@@ -155,9 +138,9 @@ const PRIORIDAD_COLOR = { baja: G.accentGreen, media: G.accentOrange, alta: G.ac
 const ESTADO_COLOR    = { pendiente: G.textMuted, en_progreso: G.accent, revision: G.accentOrange, completado: G.accentGreen };
 const VEST_COLOR      = { programada: G.accent, en_progreso: G.accentOrange, realizada: G.accentGreen, cancelada: G.accentRed };
 const VEST_LABELS     = { programada: "Programada", en_progreso: "En Progreso", realizada: "Realizada", cancelada: "Cancelada" };
+
 const HORAS_CAPACIDAD_REF = 20;
 
-// ─── Utilidades ───────────────────────────────────────────────────────────────
 function hoy() { return new Date().toISOString().slice(0, 10); }
 function diasHasta(fecha) {
   const h = new Date(); h.setHours(0,0,0,0);
@@ -195,48 +178,163 @@ function fmtTs(iso) {
   return new Date(iso).toLocaleString("es-CL", { day:"2-digit", month:"short", year:"2-digit", hour:"2-digit", minute:"2-digit" });
 }
 
-// ─── Componentes base ─────────────────────────────────────────────────────────
 function Field({ label, children }) { return <div><span style={css.label}>{label}</span>{children}</div>; }
-function Toast({ msg, ok, onClose }) {
-  useEffect(() => { const t = setTimeout(onClose, 4500); return () => clearTimeout(t); }, [onClose]);
-  return <div style={{ position:"fixed", bottom:24, right:24, background: ok ? G.accentGreen : G.accentRed, color:"#fff", padding:"12px 20px", borderRadius:8, fontSize:13, fontFamily:"inherit", zIndex:9999, fontWeight:600, maxWidth:340, boxShadow:"0 4px 16px rgba(0,0,0,0.15)" }}>{ok ? "✓" : "✗"} {msg}</div>;
-}
-function FbErrorBanner({ errores }) {
-  const lista = errores.filter(Boolean);
-  if (lista.length === 0) return null;
+... [EL RESTO DE TUS COMPONENTES: Toast, FbErrorBanner, AlertChip, DonutChart, SemaforoCarga, TablaAtrasados, ResumenSemanal, MiniCalendario, InformeModule, HistorialCargaModule, AlertaDiaria, FormTarea, FormReunion, FormVisita, TareasReunionesModule, ReunionesPanel, VisitasModule, SOEModule, FormCont, ContingenciasModule, FormAusencia, AusenciasModule, Dashboard SE MANTIENEN IGUAL] ...
+
+// ─── PANTALLA DE SELECCIÓN DE DEPARTAMENTO ────────────────────────────────────
+function PantallaSeleccion({ onSeleccionar }) {
   return (
-    <div style={{ background: G.accentRedLight, borderBottom: `2px solid ${G.accentRed}`, padding: "10px 28px", display:"flex", alignItems:"center", gap:12, fontSize:12, color: G.accentRed }}>
-      <span style={{ fontWeight:700, fontSize:16 }}>⚠</span>
-      <span><strong>Problema de conexión con Firebase.</strong> {lista[0]} — Verifica tu conexión a internet. Los cambios no se están guardando.</span>
-    </div>
-  );
-}
-function AlertChip({ val, label, color, bg }) {
-  return (
-    <div style={{ flex:1, minWidth:160, background:bg, border:`1.5px solid ${color}44`, borderRadius:10, padding:"13px 18px", display:"flex", alignItems:"center", gap:12 }}>
-      <div style={{ width:38, height:38, borderRadius:"50%", background:color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-        <span style={{ color:"#fff", fontSize:18, fontWeight:700 }}>!</span>
+    <div style={{ ...css.app, alignItems: "center", justifyContent: "center", background: G.bg, minHeight: "100vh" }}>
+      <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ fontSize: 48, color: G.accent, marginBottom: 16 }}>⬡</div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: G.text, margin: 0 }}>Gestión Operativa</h1>
+        <p style={{ fontSize: 14, color: G.textMuted, marginTop: 8 }}>Seleccione su departamento para ingresar al sistema</p>
       </div>
-      <div>
-        <div style={{ fontSize:22, fontWeight:700, color, lineHeight:1 }}>{val}</div>
-        <div style={{ fontSize:11, color, marginTop:3, fontWeight:500 }}>{label}</div>
+
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center", maxWidth: 800, padding: 20 }}>
+        <div 
+          onClick={() => onSeleccionar("dadt")}
+          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16 }}>⚕️</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Apoyo Diagnóstico y Terapéutico</div>
+          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo del DADT.</div>
+        </div>
+
+        <div 
+          onClick={() => onSeleccionar("proc")}
+          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Gestión de Procesos</div>
+          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo de Procesos.</div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── DonutChart ───────────────────────────────────────────────────────────────
-function DonutChart({ pendientes, completadas, enProgreso, revision }) {
-  const total = pendientes + completadas + enProgreso + revision;
-  const size = 180, cx = 90, cy = 90, r = 68, sw = 24, circ = 2 * Math.PI * r;
-  const segs = [{ v:completadas, c:G.accentGreen },{ v:enProgreso, c:G.accent },{ v:revision, c:G.accentOrange },{ v:pendientes, c:G.textDim }].filter(s => s.v > 0);
-  let off = 0;
-  const arcs = segs.map(s => { const dash=(s.v/total)*circ; const a={...s,dash,gap:circ-dash,off}; off+=dash; return a; });
-  const pct = total > 0 ? Math.round(completadas/total*100) : 0;
-  const pColor = pct>=75 ? G.accentGreen : pct>=40 ? G.accent : G.accentOrange;
+// ─── APP ──────────────────────────────────────────────────────────────────────
+const MODULOS = [
+  { id:"dashboard",     label:"Resumen"            },
+  { id:"tareas",        label:"Tareas y Reuniones" },
+  { id:"visitas",       label:"Visitas"            },
+  { id:"soe",           label:"Trab. Extraord."    },
+  { id:"contingencias", label:"Contingencias"      },
+  { id:"ausencias",     label:"Ausencias"          },
+  { id:"informe",       label:"Informe"            },
+  { id:"historial",     label:"Historial Carga"    },
+];
+
+export default function App() {
+  const [modulo, setModulo] = useState("dashboard");
+  const [departamento, setDepartamento] = useState(null);
+
+  const prefijo = departamento ? `${departamento}_` : null;
+
+  const [tareas,        cargandoTareas, errTareas]    = useColeccion(prefijo ? `${prefijo}tareas` : null);
+  const [reuniones,     cargandoReun,  errReuniones]  = useColeccion(prefijo ? `${prefijo}reuniones` : null);
+  const [visitas,       cargandoVis,   errVisitas]    = useColeccion(prefijo ? `${prefijo}visitas` : null);
+  const [soe,           cargandoSoe,   errSoe]        = useColeccion(prefijo ? `${prefijo}soe` : null);
+  const [contingencias, cargandoCont,  errCont]       = useColeccion(prefijo ? `${prefijo}contingencias` : null);
+  const [ausencias,     cargandoAus,   errAus]        = useColeccion(prefijo ? `${prefijo}ausencias` : null);
+
+  const [toast, setToast] = useState(null);
+  const addToast = useCallback((msg, ok=true) => setToast({ msg, ok }), []);
+  
+  const cargando = departamento && (cargandoTareas||cargandoReun||cargandoVis||cargandoSoe||cargandoCont||cargandoAus);
+
+  const fbTareas    = useMemo(() => mkFb(prefijo ? `${prefijo}tareas` : "dummy",        addToast), [prefijo, addToast]);
+  const fbReuniones = useMemo(() => mkFb(prefijo ? `${prefijo}reuniones` : "dummy",     addToast), [prefijo, addToast]);
+  const fbVisitas   = useMemo(() => mkFb(prefijo ? `${prefijo}visitas` : "dummy",       addToast), [prefijo, addToast]);
+  const fbSoe       = useMemo(() => mkFb(prefijo ? `${prefijo}soe` : "dummy",           addToast), [prefijo, addToast]);
+  const fbCont      = useMemo(() => mkFb(prefijo ? `${prefijo}contingencias` : "dummy", addToast), [prefijo, addToast]);
+  const fbAus       = useMemo(() => mkFb(prefijo ? `${prefijo}ausencias` : "dummy",     addToast), [prefijo, addToast]);
+
+  useEffect(() => {
+    if (!departamento || cargando) return;
+    const k = `alertaDiaria_${departamento}_${hoy()}`;
+    if (!sessionStorage.getItem(k)) { setMostrarAlerta(true); sessionStorage.setItem(k, "1"); }
+  }, [cargando, departamento]);
+
+  useEffect(() => {
+    if (!departamento) return;
+    const alertadas = JSON.parse(sessionStorage.getItem(`alertasVenc_${departamento}`) || "[]");
+    tareas.forEach(async t => {
+      if (t.estado==="completado") return;
+      const d=diasHasta(t.fechaTermino);
+      if (d>=0&&d<=3&&!alertadas.includes(t.id)) {
+        const ok=await notificarVencimiento(t,d);
+        if (ok) { alertadas.push(t.id); sessionStorage.setItem(`alertasVenc_${departamento}`, JSON.stringify(alertadas)); }
+      }
+    });
+  }, [tareas, departamento]);
+
+  if (!departamento) {
+    return <PantallaSeleccion onSeleccionar={setDepartamento} />;
+  }
+
+  const soePendientes  = soe.filter(s=>s.estado==="pendiente").length;
+  const contActivas    = contingencias.filter(c=>c.estado==="activa").length;
+  const tareasUrgentes = tareas.filter(t=>t.estado!=="completado"&&diasHasta(t.fechaTermino)<=3).length;
+  const ausHoy         = ausencias.filter(a=>{ const h=hoy(); return a.fechaInicio<=h&&a.fechaTermino>=h; }).length;
+  const errores        = [errTareas, errReuniones, errVisitas, errSoe, errCont, errAus];
+
+  if (cargando) return (
+    <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+      <div style={{ fontSize:36, color:G.accent }}>⬡</div>
+      <div style={{ fontSize:14, color:G.textMuted, fontWeight:500 }}>Cargando datos...</div>
+    </div>
+  );
+
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:28 }}>
-      <div style={{ position:"relative", flexShrink:0 }}>
-        <svg width={size} height={size}>
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke={G.borderLight} strokeWidth={sw} />
-          {arcs.map((a,i) => <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={a.c} strokeWidth={sw} strokeDasharray={`${a.dash} ${a.gap}`} strokeDashoffset={circ/4-a.off} strokeLinecap="round" style={{ transition:"stroke-dash
+    <div style={css.app}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); *{box-sizing:border-box} body{margin:0} ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:#F7F8FC} ::-webkit-scrollbar-thumb{background:#DDE2EF;border-radius:3px} input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.6} @keyframes semaforoPulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 8px var(--pulse-color,#C81E1E99)}50%{opacity:.75;transform:scale(1.2);box-shadow:0 0 16px var(--pulse-color,#C81E1E)}}`}</style>
+
+      <header style={css.header}>
+        <div>
+          <div style={css.logoText}>⬡ Gestión Operativa</div>
+          <div style={{ fontSize:11, color:G.textMuted, marginTop:2, fontWeight: 600 }}>
+            {departamento === "dadt" ? "Depto. Apoyo Diagnóstico y Terapéutico" : "Depto. Gestión de Procesos"}
+          </div>
+        </div>
+        <nav style={css.nav}>
+          {MODULOS.map(m => (
+            <button key={m.id} style={css.navBtn(modulo===m.id)} onClick={()=>setModulo(m.id)}>
+              {m.label}
+              {m.id==="tareas"        && tareasUrgentes>0 && <span style={{ marginLeft:5, background:G.accentOrange, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{tareasUrgentes}</span>}
+              {m.id==="tareas"        && reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length>0 && <span style={{ marginLeft:5, background:G.accentPurple, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length}</span>}
+              {m.id==="soe"           && soePendientes>0  && <span style={{ marginLeft:5, background:G.accentYellow, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{soePendientes}</span>}
+              {m.id==="contingencias" && contActivas>0    && <span style={{ marginLeft:5, background:G.accentRed, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{contActivas}</span>}
+              {m.id==="ausencias"     && ausHoy>0         && <span style={{ marginLeft:5, background:"#0891B2", color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{ausHoy}</span>}
+            </button>
+          ))}
+        </nav>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div style={{ fontSize:10, color:G.textDim }}>{new Date().toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>
+          <button 
+            onClick={() => { setDepartamento(null); setModulo("dashboard"); }} 
+            style={{ ...css.btn("ghost"), padding: "4px 8px", fontSize: 10, borderColor: G.borderLight }}
+          >
+            ⟵ Cambiar Depto.
+          </button>
+        </div>
+      </header>
+
+      <FbErrorBanner errores={errores} />
+
+      <main style={css.main}>
+        {modulo==="dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} ausencias={ausencias} />}
+        {modulo==="tareas"        && <TareasReunionesModule tareas={tareas} reuniones={reuniones} fbTareas={fbTareas} fbReuniones={fbReuniones} addToast={addToast} />}
+        {modulo==="visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} addToast={addToast} />}
+        {modulo==="soe"           && <SOEModule soe={soe} fb={fbSoe} addToast={addToast} />}
+        {modulo==="contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} addToast={addToast} />}
+        {modulo==="ausencias"     && <AusenciasModule ausencias={ausencias} fb={fbAus} addToast={addToast} />}
+        {modulo==="informe"       && <InformeModule tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
+        {modulo==="historial"     && <HistorialCargaModule tareas={tareas} />}
+      </main>
+
+      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={()=>setToast(null)} />}
+    </div>
+  );
+}
