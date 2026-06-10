@@ -1958,8 +1958,9 @@ function Dashboard({ tareas, visitas, soe, contingencias, ausencias }) {
 }
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
+// ─── APP ──────────────────────────────────────────────────────────────────────
 const MODULOS = [
-  { id:"dashboard",     label:"Resumen"           },
+  { id:"dashboard",     label:"Resumen"            },
   { id:"tareas",        label:"Tareas y Reuniones" },
   { id:"visitas",       label:"Visitas"            },
   { id:"soe",           label:"Trab. Extraord."    },
@@ -1968,6 +1969,130 @@ const MODULOS = [
   { id:"informe",       label:"Informe"            },
   { id:"historial",     label:"Historial Carga"    },
 ];
+
+export default function App() {
+  const [modulo, setModulo] = useState("dashboard");
+  const [departamento, setDepartamento] = useState(null); // 'dadt' | 'proc' | null
+
+  // Determinamos el prefijo para Firebase según el departamento
+  const prefijo = departamento ? `${departamento}_` : null;
+
+  // Solo hacemos las consultas si hay un departamento seleccionado (prefijo no es null)
+  const [tareas,        cargandoTareas, errTareas]    = useColeccion(prefijo ? `${prefijo}tareas` : null);
+  const [reuniones,     cargandoReun,  errReuniones]  = useColeccion(prefijo ? `${prefijo}reuniones` : null);
+  const [visitas,       cargandoVis,   errVisitas]    = useColeccion(prefijo ? `${prefijo}visitas` : null);
+  const [soe,           cargandoSoe,   errSoe]        = useColeccion(prefijo ? `${prefijo}soe` : null);
+  const [contingencias, cargandoCont,  errCont]       = useColeccion(prefijo ? `${prefijo}contingencias` : null);
+  const [ausencias,     cargandoAus,   errAus]        = useColeccion(prefijo ? `${prefijo}ausencias` : null);
+
+  const [toast, setToast] = useState(null);
+  const addToast = useCallback((msg, ok=true) => setToast({ msg, ok }), []);
+  
+  // No mostramos "Cargando..." si estamos en la pantalla inicial (departamento == null)
+  const cargando = departamento && (cargandoTareas||cargandoReun||cargandoVis||cargandoSoe||cargandoCont||cargandoAus);
+
+  // Operaciones Firebase con error handling y nombres dinámicos
+  const fbTareas    = useMemo(() => mkFb(prefijo ? `${prefijo}tareas` : "dummy",        addToast), [prefijo, addToast]);
+  const fbReuniones = useMemo(() => mkFb(prefijo ? `${prefijo}reuniones` : "dummy",     addToast), [prefijo, addToast]);
+  const fbVisitas   = useMemo(() => mkFb(prefijo ? `${prefijo}visitas` : "dummy",       addToast), [prefijo, addToast]);
+  const fbSoe       = useMemo(() => mkFb(prefijo ? `${prefijo}soe` : "dummy",           addToast), [prefijo, addToast]);
+  const fbCont      = useMemo(() => mkFb(prefijo ? `${prefijo}contingencias` : "dummy", addToast), [prefijo, addToast]);
+  const fbAus       = useMemo(() => mkFb(prefijo ? `${prefijo}ausencias` : "dummy",     addToast), [prefijo, addToast]);
+
+  // Alerta diaria (una vez por sesión)
+  const [mostrarAlerta, setMostrarAlerta] = useState(false);
+  useEffect(() => {
+    if (!departamento || cargando) return;
+    const k = `alertaDiaria_${departamento}_${hoy()}`;
+    if (!sessionStorage.getItem(k)) { setMostrarAlerta(true); sessionStorage.setItem(k, "1"); }
+  }, [cargando, departamento]);
+
+  // Notificaciones de vencimiento próximo
+  useEffect(() => {
+    if (!departamento) return;
+    const alertadas = JSON.parse(sessionStorage.getItem(`alertasVenc_${departamento}`) || "[]");
+    tareas.forEach(async t => {
+      if (t.estado==="completado") return;
+      const d=diasHasta(t.fechaTermino);
+      if (d>=0&&d<=3&&!alertadas.includes(t.id)) {
+        const ok=await notificarVencimiento(t,d);
+        if (ok) { alertadas.push(t.id); sessionStorage.setItem(`alertasVenc_${departamento}`, JSON.stringify(alertadas)); }
+      }
+    });
+  }, [tareas, departamento]);
+
+  // Si no hay departamento, renderizamos la pantalla inicial
+  if (!departamento) {
+    return <PantallaSeleccion onSeleccionar={setDepartamento} />;
+  }
+
+  const soePendientes  = soe.filter(s=>s.estado==="pendiente").length;
+  const contActivas    = contingencias.filter(c=>c.estado==="activa").length;
+  const tareasUrgentes = tareas.filter(t=>t.estado!=="completado"&&diasHasta(t.fechaTermino)<=3).length;
+  const ausHoy         = ausencias.filter(a=>{ const h=hoy(); return a.fechaInicio<=h&&a.fechaTermino>=h; }).length;
+  const errores        = [errTareas, errReuniones, errVisitas, errSoe, errCont, errAus];
+
+  if (cargando) return (
+    <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+      <div style={{ fontSize:36, color:G.accent }}>⬡</div>
+      <div style={{ fontSize:14, color:G.textMuted, fontWeight:500 }}>Cargando datos...</div>
+    </div>
+  );
+
+  return (
+    <div style={css.app}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); *{box-sizing:border-box} body{margin:0} ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:#F7F8FC} ::-webkit-scrollbar-thumb{background:#DDE2EF;border-radius:3px} input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.6} @keyframes semaforoPulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 8px var(--pulse-color,#C81E1E99)}50%{opacity:.75;transform:scale(1.2);box-shadow:0 0 16px var(--pulse-color,#C81E1E)}}`}</style>
+
+      {mostrarAlerta && <AlertaDiaria tareas={tareas} onCerrar={()=>setMostrarAlerta(false)} />}
+
+      <header style={css.header}>
+        <div>
+          <div style={css.logoText}>⬡ Gestión Operativa</div>
+          <div style={{ fontSize:11, color:G.textMuted, marginTop:2, fontWeight: 600 }}>
+            {departamento === "dadt" ? "Depto. Apoyo Diagnóstico y Terapéutico" : "Depto. Gestión de Procesos"}
+          </div>
+        </div>
+        <nav style={css.nav}>
+          {MODULOS.map(m => (
+            <button key={m.id} style={css.navBtn(modulo===m.id)} onClick={()=>setModulo(m.id)}>
+              {m.label}
+              {m.id==="tareas"        && tareasUrgentes>0 && <span style={{ marginLeft:5, background:G.accentOrange, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{tareasUrgentes}</span>}
+              {m.id==="tareas"        && reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length>0 && <span style={{ marginLeft:5, background:G.accentPurple, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length}</span>}
+              {m.id==="soe"           && soePendientes>0  && <span style={{ marginLeft:5, background:G.accentYellow, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{soePendientes}</span>}
+              {m.id==="contingencias" && contActivas>0    && <span style={{ marginLeft:5, background:G.accentRed, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{contActivas}</span>}
+              {m.id==="ausencias"     && ausHoy>0         && <span style={{ marginLeft:5, background:"#0891B2", color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{ausHoy}</span>}
+            </button>
+          ))}
+        </nav>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div style={{ fontSize:10, color:G.textDim }}>{new Date().toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>
+          <button 
+            onClick={() => { setDepartamento(null); setModulo("dashboard"); }} 
+            style={{ ...css.btn("ghost"), padding: "4px 8px", fontSize: 10, borderColor: G.borderLight }}
+          >
+            ⟵ Cambiar Depto.
+          </button>
+        </div>
+      </header>
+
+      {/* Banner de error Firebase — visible en todos los módulos */}
+      <FbErrorBanner errores={errores} />
+
+      <main style={css.main}>
+        {modulo==="dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} ausencias={ausencias} />}
+        {modulo==="tareas"        && <TareasReunionesModule tareas={tareas} reuniones={reuniones} fbTareas={fbTareas} fbReuniones={fbReuniones} addToast={addToast} />}
+        {modulo==="visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} addToast={addToast} />}
+        {modulo==="soe"           && <SOEModule soe={soe} fb={fbSoe} addToast={addToast} />}
+        {modulo==="contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} addToast={addToast} />}
+        {modulo==="ausencias"     && <AusenciasModule ausencias={ausencias} fb={fbAus} addToast={addToast} />}
+        {modulo==="informe"       && <InformeModule tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
+        {modulo==="historial"     && <HistorialCargaModule tareas={tareas} />}
+      </main>
+
+      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={()=>setToast(null)} />}
+    </div>
+  );
+}
 // ─── PANTALLA DE SELECCIÓN DE DEPARTAMENTO ────────────────────────────────────
 function PantallaSeleccion({ onSeleccionar }) {
   return (
