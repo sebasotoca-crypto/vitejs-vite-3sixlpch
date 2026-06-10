@@ -1968,7 +1968,44 @@ const MODULOS = [
   { id:"informe",       label:"Informe"            },
   { id:"historial",     label:"Historial Carga"    },
 ];
+// ─── PANTALLA DE SELECCIÓN DE DEPARTAMENTO ────────────────────────────────────
+function PantallaSeleccion({ onSeleccionar }) {
+  return (
+    <div style={{ ...css.app, alignItems: "center", justifyContent: "center", background: G.bg }}>
+      <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ fontSize: 48, color: G.accent, marginBottom: 16 }}>⬡</div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: G.text, margin: 0 }}>Gestión Operativa</h1>
+        <p style={{ fontSize: 14, color: G.textMuted, marginTop: 8 }}>Seleccione su departamento para ingresar al sistema</p>
+      </div>
 
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center", maxWidth: 800, padding: 20 }}>
+        {/* Tarjeta DADT */}
+        <div 
+          onClick={() => onSeleccionar("dadt")}
+          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = G.accent}
+          onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16 }}>⚕️</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Apoyo Diagnóstico y Terapéutico</div>
+          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo del DADT.</div>
+        </div>
+
+        {/* Tarjeta PROCESOS */}
+        <div 
+          onClick={() => onSeleccionar("proc")}
+          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = G.accentOrange}
+          onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Gestión de Procesos</div>
+          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo de Procesos.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function App() {
   const [modulo, setModulo] = useState("dashboard");
   const [tareas,        cargandoTareas, errTareas]    = useColeccion("tareas");
