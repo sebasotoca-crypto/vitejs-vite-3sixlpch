@@ -63,7 +63,7 @@ const EMAILJS_CONFIG = {
   TEMPLATE_SOE:        "TU_TEMPLATE_SOE_ID",
   PUBLIC_KEY:          "Mt6cb7NrWs_-YsfPP",
 };
-const CORREOS = {
+const CORREOS_DADT = {
   "Macarena Godoy":  "macarena.godoy@redsalud.gob.cl",
   "Carlos Faunes":   "carlos.faunes@redsalud.gob.cl",
   "Constanza Jara":  "constanza.jarau@redsalud.gob.cl",
@@ -71,10 +71,26 @@ const CORREOS = {
   "Tomas Chavez":    "tomas.chavez.g@redsalud.gob.cl",
   "Sebastian Soto":  "sebastian.soto.c@redsalud.gob.cl",
 };
+
+const CORREOS_PROC = {
+  ...CORREOS_DADT,
+  "Daniela Paredes":  "daniela.paredes@redsalud.gob.cl",
+  "Gloria Vasquez":   "gloria.vasquezc@redsalud.gob.cl",
+  "Andres Flores":    "andres.flores.m@redsalud.gob.cl",
+  "Maria Piña":       "maria.pinav@redsalud.gob.cl",
+  "Valentina Arcos":  "valentina.arcos@redsalud.gob.cl",
+  "Vicente Ojeda":    "vicente.ojeda@redsalud.gob.cl",
+};
+
 const JEFATURAS = {
   "Macarena Godoy": "macarena.godoy@redsalud.gob.cl",
   "Sebastian Soto": "sebastian.soto.c@redsalud.gob.cl",
 };
+
+// Helper para obtener los correos según el departamento activo
+function getCorreos(departamento) {
+  return departamento === "proc" ? CORREOS_PROC : CORREOS_DADT;
+}
 
 async function enviarCorreo(templateId, params) {
   try {
@@ -129,7 +145,6 @@ const css = {
   modalBox: { background: "#fff", border: `1px solid ${G.border}`, borderRadius: 12, padding: 28, width: 580, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" },
 };
 
-const RESPONSABLES  = [...new Set([...Object.keys(CORREOS), ...Object.keys(JEFATURAS)])];
 const PRIORIDADES   = ["baja", "media", "alta"];
 const ESTADOS       = ["pendiente", "en_progreso", "revision", "completado"];
 const ESTADO_LABELS = { pendiente: "Pendiente", en_progreso: "En Progreso", revision: "Revisión", completado: "Completado" };
@@ -183,66 +198,195 @@ function Field({ label, children }) { return <div><span style={css.label}>{label
 
 // ─── PANTALLA DE SELECCIÓN DE DEPARTAMENTO ────────────────────────────────────
 function PantallaSeleccion({ onSeleccionar }) {
+  const [hover, setHover] = useState(null);
+
+  const cardBase = {
+    background: "#fff",
+    border: "2px solid transparent",
+    borderRadius: 14,
+    padding: "40px 36px",
+    width: 300,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 14,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+    userSelect: "none",
+  };
+
+  const cardHover = {
+    borderColor: G.accent,
+    boxShadow: "0 8px 28px rgba(26,86,219,0.18)",
+    transform: "translateY(-4px)",
+  };
+
+  const deptos = [
+    {
+      id: "dadt",
+      icon: "⚕️",
+      titulo: "Apoyo Diagnóstico y Terapéutico",
+      desc: "Panel de control exclusivo del DADT.",
+      accentColor: G.accent,
+    },
+    {
+      id: "proc",
+      icon: "📊",
+      titulo: "Gestión de Procesos",
+      desc: "Panel de control exclusivo de Procesos.",
+      accentColor: G.accentPurple,
+    },
+  ];
+
   return (
-    <div style={{ ...css.app, alignItems: "center", justifyContent: "center", background: G.bg, minHeight: "100vh" }}>
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <div style={{ fontSize: 48, color: G.accent, marginBottom: 16 }}>⬡</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: G.text, margin: 0 }}>Gestión Operativa</h1>
-        <p style={{ fontSize: 14, color: G.textMuted, marginTop: 8 }}>Seleccione su departamento para ingresar al sistema</p>
+    <div
+      style={{
+        fontFamily: "'Inter','Segoe UI',system-ui,sans-serif",
+        background: G.bg,
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      {/* Logo + título */}
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            background: G.accent,
+            borderRadius: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 30,
+            margin: "0 auto 20px",
+            boxShadow: "0 4px 16px rgba(26,86,219,0.30)",
+          }}
+        >
+          ⬡
+        </div>
+        <h1
+          style={{
+            fontSize: 26,
+            fontWeight: 700,
+            color: G.text,
+            margin: 0,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Gestión Operativa
+        </h1>
+        <p
+          style={{
+            fontSize: 14,
+            color: G.textMuted,
+            marginTop: 8,
+            maxWidth: 340,
+            lineHeight: 1.5,
+          }}
+        >
+          Seleccione su departamento para ingresar al panel de control
+        </p>
       </div>
 
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center", maxWidth: 800, padding: 20 }}>
-        <div 
-          onClick={() => onSeleccionar("dadt")}
-          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
-        >
-          <div style={{ fontSize: 40, marginBottom: 16 }}>⚕️</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Apoyo Diagnóstico y Terapéutico</div>
-          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo del DADT.</div>
-        </div>
+      {/* Cards */}
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+        {deptos.map((d) => (
+          <div
+            key={d.id}
+            onClick={() => onSeleccionar(d.id)}
+            onMouseEnter={() => setHover(d.id)}
+            onMouseLeave={() => setHover(null)}
+            style={{ ...cardBase, ...(hover === d.id ? { ...cardHover, borderColor: d.accentColor, boxShadow: `0 8px 28px ${d.accentColor}28` } : {}) }}
+          >
+            {/* Ícono con fondo de color */}
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 14,
+                background: hover === d.id ? d.accentColor + "18" : G.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 30,
+                transition: "background 0.2s",
+              }}
+            >
+              {d.icon}
+            </div>
 
-        <div 
-          onClick={() => onSeleccionar("proc")}
-          style={{ ...css.card, width: 320, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: `2px solid transparent`, transition: "all 0.2s" }}
-        >
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: G.text, textAlign: "center" }}>Gestión de Procesos</div>
-          <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", marginTop: 12 }}>Ingresar al panel de control exclusivo de Procesos.</div>
-        </div>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: G.text,
+                textAlign: "center",
+                lineHeight: 1.35,
+              }}
+            >
+              {d.titulo}
+            </div>
+
+            <div style={{ fontSize: 12, color: G.textMuted, textAlign: "center", lineHeight: 1.5 }}>
+              {d.desc}
+            </div>
+
+            {/* Botón indicador */}
+            <div
+              style={{
+                marginTop: 6,
+                padding: "7px 20px",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                background: hover === d.id ? d.accentColor : "transparent",
+                color: hover === d.id ? "#fff" : d.accentColor,
+                border: `1px solid ${d.accentColor}`,
+                transition: "all 0.2s",
+              }}
+            >
+              Ingresar →
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{ marginTop: 48, fontSize: 11, color: G.textDim }}>
+        {new Date().toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
       </div>
     </div>
   );
 }
-
 // ─── APP ──────────────────────────────────────────────────────────────────────
-const MODULOS = [
-  { id:"dashboard",     label:"Resumen"            },
-  { id:"tareas",        label:"Tareas y Reuniones" },
-  { id:"visitas",       label:"Visitas"            },
-  { id:"soe",           label:"Trab. Extraord."    },
-  { id:"contingencias", label:"Contingencias"      },
-  { id:"ausencias",     label:"Ausencias"          },
-  { id:"informe",       label:"Informe"            },
-  { id:"historial",     label:"Historial Carga"    },
-];
-
 export default function App() {
   const [modulo, setModulo] = useState("dashboard");
   const [departamento, setDepartamento] = useState(null);
+  const [mostrarAlerta, setMostrarAlerta] = useState(false);
 
   const prefijo = departamento ? `${departamento}_` : null;
 
   const [tareas,        cargandoTareas, errTareas]    = useColeccion(prefijo ? `${prefijo}tareas` : null);
-  const [reuniones,     cargandoReun,  errReuniones]  = useColeccion(prefijo ? `${prefijo}reuniones` : null);
-  const [visitas,       cargandoVis,   errVisitas]    = useColeccion(prefijo ? `${prefijo}visitas` : null);
-  const [soe,           cargandoSoe,   errSoe]        = useColeccion(prefijo ? `${prefijo}soe` : null);
-  const [contingencias, cargandoCont,  errCont]       = useColeccion(prefijo ? `${prefijo}contingencias` : null);
-  const [ausencias,     cargandoAus,   errAus]        = useColeccion(prefijo ? `${prefijo}ausencias` : null);
+  const [reuniones,     cargandoReun,   errReuniones] = useColeccion(prefijo ? `${prefijo}reuniones` : null);
+  const [visitas,       cargandoVis,    errVisitas]   = useColeccion(prefijo ? `${prefijo}visitas` : null);
+  const [soe,           cargandoSoe,    errSoe]       = useColeccion(prefijo ? `${prefijo}soe` : null);
+  const [contingencias, cargandoCont,   errCont]      = useColeccion(prefijo ? `${prefijo}contingencias` : null);
+  const [ausencias,     cargandoAus,    errAus]       = useColeccion(prefijo ? `${prefijo}ausencias` : null);
 
   const [toast, setToast] = useState(null);
-  const addToast = useCallback((msg, ok=true) => setToast({ msg, ok }), []);
-  
-  const cargando = departamento && (cargandoTareas||cargandoReun||cargandoVis||cargandoSoe||cargandoCont||cargandoAus);
+  const addToast = useCallback((msg, ok = true) => setToast({ msg, ok }), []);
+
+  // ── Responsables dinámicos según departamento ──────────────────────────────
+  const CORREOS     = useMemo(() => getCorreos(departamento), [departamento]);
+  const RESPONSABLES = useMemo(() => [...new Set([...Object.keys(CORREOS), ...Object.keys(JEFATURAS)])], [CORREOS]);
+
+  const cargando = departamento && (cargandoTareas || cargandoReun || cargandoVis || cargandoSoe || cargandoCont || cargandoAus);
 
   const fbTareas    = useMemo(() => mkFb(prefijo ? `${prefijo}tareas` : "dummy",        addToast), [prefijo, addToast]);
   const fbReuniones = useMemo(() => mkFb(prefijo ? `${prefijo}reuniones` : "dummy",     addToast), [prefijo, addToast]);
@@ -254,66 +398,95 @@ export default function App() {
   useEffect(() => {
     if (!departamento || cargando) return;
     const k = `alertaDiaria_${departamento}_${hoy()}`;
-    if (!sessionStorage.getItem(k)) { setMostrarAlerta(true); sessionStorage.setItem(k, "1"); }
+    if (!sessionStorage.getItem(k)) {
+      setMostrarAlerta(true);
+      sessionStorage.setItem(k, "1");
+    }
   }, [cargando, departamento]);
 
   useEffect(() => {
     if (!departamento) return;
     const alertadas = JSON.parse(sessionStorage.getItem(`alertasVenc_${departamento}`) || "[]");
-    tareas.forEach(async t => {
-      if (t.estado==="completado") return;
-      const d=diasHasta(t.fechaTermino);
-      if (d>=0&&d<=3&&!alertadas.includes(t.id)) {
-        const ok=await notificarVencimiento(t,d);
-        if (ok) { alertadas.push(t.id); sessionStorage.setItem(`alertasVenc_${departamento}`, JSON.stringify(alertadas)); }
+    tareas.forEach(async (t) => {
+      if (t.estado === "completado") return;
+      const d = diasHasta(t.fechaTermino);
+      if (d >= 0 && d <= 3 && !alertadas.includes(t.id)) {
+        const correo = CORREOS[t.responsable];
+        if (!correo) return;
+        const ok = await notificarVencimiento(t, d);
+        if (ok) {
+          alertadas.push(t.id);
+          sessionStorage.setItem(`alertasVenc_${departamento}`, JSON.stringify(alertadas));
+        }
       }
     });
-  }, [tareas, departamento]);
+  }, [tareas, departamento, CORREOS]);
 
   if (!departamento) {
-    return <PantallaSeleccion onSeleccionar={setDepartamento} />;
+    return <PantallaSeleccion onSeleccionar={(id) => { setDepartamento(id); setModulo("dashboard"); }} />;
   }
 
-  const soePendientes  = soe.filter(s=>s.estado==="pendiente").length;
-  const contActivas    = contingencias.filter(c=>c.estado==="activa").length;
-  const tareasUrgentes = tareas.filter(t=>t.estado!=="completado"&&diasHasta(t.fechaTermino)<=3).length;
-  const ausHoy         = ausencias.filter(a=>{ const h=hoy(); return a.fechaInicio<=h&&a.fechaTermino>=h; }).length;
+  const soePendientes  = soe.filter((s) => s.estado === "pendiente").length;
+  const contActivas    = contingencias.filter((c) => c.estado === "activa").length;
+  const tareasUrgentes = tareas.filter((t) => t.estado !== "completado" && diasHasta(t.fechaTermino) <= 3).length;
+  const ausHoy         = ausencias.filter((a) => { const h = hoy(); return a.fechaInicio <= h && a.fechaTermino >= h; }).length;
   const errores        = [errTareas, errReuniones, errVisitas, errSoe, errCont, errAus];
 
   if (cargando) return (
-    <div style={{ ...css.app, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
-      <div style={{ fontSize:36, color:G.accent }}>⬡</div>
-      <div style={{ fontSize:14, color:G.textMuted, fontWeight:500 }}>Cargando datos...</div>
+    <div style={{ ...css.app, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <div style={{ fontSize: 36, color: G.accent }}>⬡</div>
+      <div style={{ fontSize: 14, color: G.textMuted, fontWeight: 500 }}>Cargando datos...</div>
     </div>
   );
 
+  const DEPTO_LABEL = {
+    dadt: "Depto. Apoyo Diagnóstico y Terapéutico",
+    proc: "Depto. Gestión de Procesos",
+  };
+
   return (
     <div style={css.app}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); *{box-sizing:border-box} body{margin:0} ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:#F7F8FC} ::-webkit-scrollbar-thumb{background:#DDE2EF;border-radius:3px} input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.6} @keyframes semaforoPulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 8px var(--pulse-color,#C81E1E99)}50%{opacity:.75;transform:scale(1.2);box-shadow:0 0 16px var(--pulse-color,#C81E1E)}}`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box }
+        body { margin: 0 }
+        ::-webkit-scrollbar { width: 6px; height: 6px }
+        ::-webkit-scrollbar-track { background: #F7F8FC }
+        ::-webkit-scrollbar-thumb { background: #DDE2EF; border-radius: 3px }
+        input[type=date]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6 }
+        @keyframes semaforoPulse {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--pulse-color, #C81E1E99) }
+          50%       { opacity: .75; transform: scale(1.2); box-shadow: 0 0 16px var(--pulse-color, #C81E1E) }
+        }
+      `}</style>
 
       <header style={css.header}>
         <div>
           <div style={css.logoText}>⬡ Gestión Operativa</div>
-          <div style={{ fontSize:11, color:G.textMuted, marginTop:2, fontWeight: 600 }}>
-            {departamento === "dadt" ? "Depto. Apoyo Diagnóstico y Terapéutico" : "Depto. Gestión de Procesos"}
+          <div style={{ fontSize: 11, color: G.textMuted, marginTop: 2, fontWeight: 600 }}>
+            {DEPTO_LABEL[departamento]}
           </div>
         </div>
+
         <nav style={css.nav}>
-          {MODULOS.map(m => (
-            <button key={m.id} style={css.navBtn(modulo===m.id)} onClick={()=>setModulo(m.id)}>
+          {MODULOS.map((m) => (
+            <button key={m.id} style={css.navBtn(modulo === m.id)} onClick={() => setModulo(m.id)}>
               {m.label}
-              {m.id==="tareas"        && tareasUrgentes>0 && <span style={{ marginLeft:5, background:G.accentOrange, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{tareasUrgentes}</span>}
-              {m.id==="tareas"        && reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length>0 && <span style={{ marginLeft:5, background:G.accentPurple, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{reuniones.filter(r=>r.estado!=="realizada"&&r.estado!=="cancelada").length}</span>}
-              {m.id==="soe"           && soePendientes>0  && <span style={{ marginLeft:5, background:G.accentYellow, color:"#000", borderRadius:99, padding:"0 5px", fontSize:9 }}>{soePendientes}</span>}
-              {m.id==="contingencias" && contActivas>0    && <span style={{ marginLeft:5, background:G.accentRed, color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{contActivas}</span>}
-              {m.id==="ausencias"     && ausHoy>0         && <span style={{ marginLeft:5, background:"#0891B2", color:"#fff", borderRadius:99, padding:"0 5px", fontSize:9 }}>{ausHoy}</span>}
+              {m.id === "tareas"        && tareasUrgentes > 0 && <span style={{ marginLeft: 5, background: G.accentOrange, color: "#000", borderRadius: 99, padding: "0 5px", fontSize: 9 }}>{tareasUrgentes}</span>}
+              {m.id === "tareas"        && reuniones.filter((r) => r.estado !== "realizada" && r.estado !== "cancelada").length > 0 && <span style={{ marginLeft: 5, background: G.accentPurple, color: "#fff", borderRadius: 99, padding: "0 5px", fontSize: 9 }}>{reuniones.filter((r) => r.estado !== "realizada" && r.estado !== "cancelada").length}</span>}
+              {m.id === "soe"           && soePendientes > 0  && <span style={{ marginLeft: 5, background: G.accentYellow, color: "#000", borderRadius: 99, padding: "0 5px", fontSize: 9 }}>{soePendientes}</span>}
+              {m.id === "contingencias" && contActivas > 0    && <span style={{ marginLeft: 5, background: G.accentRed, color: "#fff", borderRadius: 99, padding: "0 5px", fontSize: 9 }}>{contActivas}</span>}
+              {m.id === "ausencias"     && ausHoy > 0         && <span style={{ marginLeft: 5, background: "#0891B2", color: "#fff", borderRadius: 99, padding: "0 5px", fontSize: 9 }}>{ausHoy}</span>}
             </button>
           ))}
         </nav>
+
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-          <div style={{ fontSize:10, color:G.textDim }}>{new Date().toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>
-          <button 
-            onClick={() => { setDepartamento(null); setModulo("dashboard"); }} 
+          <div style={{ fontSize: 10, color: G.textDim }}>
+            {new Date().toLocaleDateString("es-CL", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+          </div>
+          <button
+            onClick={() => { setDepartamento(null); setModulo("dashboard"); }}
             style={{ ...css.btn("ghost"), padding: "4px 8px", fontSize: 10, borderColor: G.borderLight }}
           >
             ⟵ Cambiar Depto.
@@ -324,17 +497,25 @@ export default function App() {
       <FbErrorBanner errores={errores} />
 
       <main style={css.main}>
-        {modulo==="dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} ausencias={ausencias} />}
-        {modulo==="tareas"        && <TareasReunionesModule tareas={tareas} reuniones={reuniones} fbTareas={fbTareas} fbReuniones={fbReuniones} addToast={addToast} />}
-        {modulo==="visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} addToast={addToast} />}
-        {modulo==="soe"           && <SOEModule soe={soe} fb={fbSoe} addToast={addToast} />}
-        {modulo==="contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} addToast={addToast} />}
-        {modulo==="ausencias"     && <AusenciasModule ausencias={ausencias} fb={fbAus} addToast={addToast} />}
-        {modulo==="informe"       && <InformeModule tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
-        {modulo==="historial"     && <HistorialCargaModule tareas={tareas} />}
+        {modulo === "dashboard"     && <Dashboard tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} ausencias={ausencias} />}
+        {modulo === "tareas"        && <TareasReunionesModule tareas={tareas} reuniones={reuniones} fbTareas={fbTareas} fbReuniones={fbReuniones} addToast={addToast} responsables={RESPONSABLES} />}
+        {modulo === "visitas"       && <VisitasModule visitas={visitas} fb={fbVisitas} addToast={addToast} responsables={RESPONSABLES} />}
+        {modulo === "soe"           && <SOEModule soe={soe} fb={fbSoe} addToast={addToast} responsables={RESPONSABLES} />}
+        {modulo === "contingencias" && <ContingenciasModule contingencias={contingencias} fb={fbCont} addToast={addToast} responsables={RESPONSABLES} />}
+        {modulo === "ausencias"     && <AusenciasModule ausencias={ausencias} fb={fbAus} addToast={addToast} responsables={RESPONSABLES} />}
+        {modulo === "informe"       && <InformeModule tareas={tareas} visitas={visitas} soe={soe} contingencias={contingencias} />}
+        {modulo === "historial"     && <HistorialCargaModule tareas={tareas} />}
       </main>
 
-      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={()=>setToast(null)} />}
+      {mostrarAlerta && (
+        <AlertaDiaria
+          tareas={tareas}
+          ausencias={ausencias}
+          onClose={() => setMostrarAlerta(false)}
+        />
+      )}
+
+      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
     </div>
   );
 }
